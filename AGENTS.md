@@ -72,6 +72,35 @@ The library supports these custom YAML tags:
 - `!template(name)`: Load templates from `$SMARTYAML_TMPL` directory
 - `!base64(data)` / `!base64_decode(data)`: Base64 encoding/decoding
 
+### Metadata Fields
+
+SmartYAML automatically removes fields prefixed with `__` (double underscore) from the final parsed result. These metadata fields serve as annotations and documentation within YAML files but don't appear in the loaded data structure.
+
+**Features:**
+- Fields starting with `__` are removed during post-processing
+- Metadata fields can contain SmartYAML directives (processed then removed)
+- Removal works recursively through nested structures and lists
+- Can be disabled by setting `remove_metadata=False` in `load()` or `loads()`
+
+**Examples:**
+```yaml
+# Input YAML
+app_name: "MyApp"
+__version: "1.2.3"           # Metadata - removed
+__build_info: !env(BUILD_DATE) # Metadata with directive - removed
+database:
+  host: "localhost"
+  __notes: "Primary DB"      # Nested metadata - removed
+
+# Resulting data structure
+{
+  'app_name': 'MyApp',
+  'database': {
+    'host': 'localhost'
+  }
+}
+```
+
 ### Testing Structure
 
 Tests are organized by constructor type:
@@ -79,6 +108,7 @@ Tests are organized by constructor type:
 - `tests/test_environment.py`: Environment variable handling
 - `tests/test_conditional.py`: Conditional inclusion logic
 - `tests/test_encoding.py`: Base64 encoding/decoding
+- `tests/test_metadata.py`: Metadata field removal functionality
 - `tests/test_advanced_features.py`: Advanced testing scenarios
 - `tests/fixtures/`: Test YAML files and sample data
 

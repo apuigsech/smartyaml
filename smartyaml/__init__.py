@@ -10,7 +10,7 @@ from .exceptions import (
 )
 import yaml
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 __version__ = "0.1.0"
 __all__ = [
@@ -21,9 +21,38 @@ __all__ = [
 ]
 
 
+def remove_metadata_fields(data: Any) -> Any:
+    """
+    Recursively remove fields with "__" prefix from YAML data structures.
+    
+    Metadata fields are used for annotations and documentation but should not
+    appear in the final parsed result. This function traverses the entire
+    data structure and removes any dictionary keys that start with "__".
+    
+    Args:
+        data: The parsed YAML data structure
+        
+    Returns:
+        The data structure with all metadata fields removed
+    """
+    if isinstance(data, dict):
+        # Remove keys starting with "__" and recursively process remaining values
+        return {
+            key: remove_metadata_fields(value)
+            for key, value in data.items()
+            if not key.startswith("__")
+        }
+    elif isinstance(data, list):
+        # Recursively process list items
+        return [remove_metadata_fields(item) for item in data]
+    else:
+        # Return primitive types unchanged
+        return data
+
+
 def load(stream: Union[str, Path], base_path: Optional[Union[str, Path]] = None, 
          template_path: Optional[Union[str, Path]] = None, max_file_size: Optional[int] = None,
-         max_recursion_depth: Optional[int] = None) -> Any:
+         max_recursion_depth: Optional[int] = None, remove_metadata: bool = True) -> Any:
     """
     Load SmartYAML from file or string.
     
@@ -33,9 +62,10 @@ def load(stream: Union[str, Path], base_path: Optional[Union[str, Path]] = None,
         template_path: Base directory for templates (overrides SMARTYAML_TMPL env var)
         max_file_size: Maximum file size in bytes (default: 10MB)
         max_recursion_depth: Maximum import recursion depth (default: 10)
+        remove_metadata: Whether to remove fields prefixed with "__" (default: True)
     
     Returns:
-        Parsed YAML data with SmartYAML directives processed
+        Parsed YAML data with SmartYAML directives processed and metadata fields removed
     """
     if isinstance(stream, (str, Path)) and Path(stream).exists():
         # Load from file
@@ -62,12 +92,18 @@ def load(stream: Union[str, Path], base_path: Optional[Union[str, Path]] = None,
             self.max_file_size = max_file_size
             self.max_recursion_depth = max_recursion_depth
     
-    return yaml.load(content, Loader=ConfiguredSmartYAMLLoader)
+    result = yaml.load(content, Loader=ConfiguredSmartYAMLLoader)
+    
+    # Remove metadata fields if requested
+    if remove_metadata:
+        result = remove_metadata_fields(result)
+    
+    return result
 
 
 def loads(content: str, base_path: Optional[Union[str, Path]] = None, 
           template_path: Optional[Union[str, Path]] = None, max_file_size: Optional[int] = None,
-          max_recursion_depth: Optional[int] = None) -> Any:
+          max_recursion_depth: Optional[int] = None, remove_metadata: bool = True) -> Any:
     """
     Load SmartYAML from string content.
     
@@ -77,9 +113,10 @@ def loads(content: str, base_path: Optional[Union[str, Path]] = None,
         template_path: Base directory for templates (overrides SMARTYAML_TMPL env var)
         max_file_size: Maximum file size in bytes (default: 10MB)
         max_recursion_depth: Maximum import recursion depth (default: 10)
+        remove_metadata: Whether to remove fields prefixed with "__" (default: True)
     
     Returns:
-        Parsed YAML data with SmartYAML directives processed
+        Parsed YAML data with SmartYAML directives processed and metadata fields removed
     """
     if base_path is None:
         base_path = Path.cwd()
@@ -95,7 +132,13 @@ def loads(content: str, base_path: Optional[Union[str, Path]] = None,
             self.max_file_size = max_file_size
             self.max_recursion_depth = max_recursion_depth
     
-    return yaml.load(content, Loader=ConfiguredSmartYAMLLoader)
+    result = yaml.load(content, Loader=ConfiguredSmartYAMLLoader)
+    
+    # Remove metadata fields if requested
+    if remove_metadata:
+        result = remove_metadata_fields(result)
+    
+    return result
 
 
 def dump(data: Any, stream: Optional[Union[str, Path]] = None, **kwargs) -> Optional[str]:
