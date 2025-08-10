@@ -1,0 +1,11 @@
+# Database configuration file
+# This file is imported by basic_example.yaml
+
+host: localhost
+port: 5432
+database: myapp_db
+user: app_user
+password: default_password  # This will be overridden
+ssl_mode: prefer
+pool_size: 10
+timeout: 30

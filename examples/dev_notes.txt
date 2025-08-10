@@ -1,0 +1,5 @@
+Development Notes:
+- Remember to run migrations before starting the app
+- Check Redis connection on startup
+- Enable debug toolbar in development
+- Use local SSL certificates for HTTPS testing

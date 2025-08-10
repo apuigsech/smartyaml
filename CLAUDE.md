@@ -1,0 +1,53 @@
+# Claude Code Rules for SmartYAML
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+For comprehensive project information, see [AGENTS.md](AGENTS.md) which contains detailed documentation for AI agents working with this codebase.
+
+## Project Standards
+
+1. **Follow AGENTS.md**: Complete project documentation, commands, and architecture
+2. **Modern Python**: Use type hints, pathlib, f-strings (Python 3.7+)
+3. **Code Quality**: Black formatting, isort imports, flake8 linting, mypy typing
+4. **Testing**: Maintain 33+ passing tests, add tests for new features
+5. **Packaging**: Use `pyproject.toml` configuration, not `setup.py`
+
+## Essential Commands
+
+```bash
+# Test and verify
+python -m pytest                    # All tests must pass
+python -m build                     # Verify package builds
+
+# Code quality (run before committing)
+black smartyaml/
+isort smartyaml/
+flake8 smartyaml/
+mypy smartyaml/
+
+# Development setup
+pip install -e ".[dev]"
+```
+
+## Architecture Notes
+
+- **Core**: `smartyaml/__init__.py` - Main API
+- **Loaders**: `smartyaml/loader.py` - YAML parsing with custom constructors
+- **Constructors**: Individual files for each SmartYAML directive
+- **Types**: Comprehensive type system in `smartyaml/type_annotations.py`
+- **Tests**: Organized by feature in `tests/` directory
+
+## Security Considerations
+
+- File size limits and recursion protection
+- Path traversal prevention
+- Safe YAML parsing only (no code execution)
+- Environment variable access only
+
+## Quality Requirements
+
+- Maintain type hints for all code
+- All tests must pass (33+ currently)
+- Follow existing code patterns and naming
+- Document new features comprehensively
+- Security-first approach to file operations
