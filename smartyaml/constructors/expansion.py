@@ -2,132 +2,137 @@
 Variable expansion constructor for SmartYAML
 """
 
-import yaml
 from typing import Any, Dict
-from .base import BaseConstructor
-from ..utils.variable_substitution import VariableSubstitutionEngine
+
+import yaml
+
 from ..exceptions import ConstructorError
-from ..processing import ParameterExtractor, ParameterSpec, ParameterPattern, ParameterValidator
+from ..processing import (
+    ParameterExtractor,
+    ParameterPattern,
+    ParameterSpec,
+    ParameterValidator,
+)
+from ..utils.variable_substitution import VariableSubstitutionEngine
+from .base import BaseConstructor
 
 
 class ExpandConstructor(BaseConstructor):
     """
     Constructor for !expand directive.
     Performs variable substitution on strings using {{key}} syntax.
-    
+
     Usage:
         message: !expand "Hello {{name}}, welcome to {{app}}!"
-    
+
     Variables come from:
     1. Variables passed to load() function
     2. __vars metadata field (overlaid by function variables)
     """
-    
+
     # Type specifications for automatic type conversion
-    TYPE_SPECS = {
-        'content': str
-    }
-    
+    TYPE_SPECS = {"content": str}
+
     def __init__(self):
         # Create parameter specification
         content_spec = ParameterSpec(
-            name='content',
+            name="content",
             param_type=str,
             required=True,
-            description='The string content to expand with variables'
+            description="The string content to expand with variables",
         )
-        
+
         # Create parameter extractor for single scalar pattern
         extractor = ParameterExtractor(
-            pattern=ParameterPattern.SINGLE_SCALAR,
-            specs=[content_spec]
+            pattern=ParameterPattern.SINGLE_SCALAR, specs=[content_spec]
         )
-        
+
         # Create parameter validator
         validator = ParameterValidator.create_standard_validator(
-            required_params=['content'],
-            type_specs={'content': str}
+            required_params=["content"], type_specs={"content": str}
         )
-        
+
         super().__init__(
-            directive_name='!expand',
+            directive_name="!expand",
             parameter_extractor=extractor,
-            parameter_validator=validator
+            parameter_validator=validator,
         )
-    
-    def extract_parameters(self, loader: yaml.SafeLoader, node: yaml.Node) -> Dict[str, Any]:
+
+    def extract_parameters(
+        self, loader: yaml.SafeLoader, node: yaml.Node
+    ) -> Dict[str, Any]:
         """
         Extract parameters from the YAML node.
-        
+
         Args:
             loader: YAML loader instance
             node: YAML node containing the content to expand
-            
+
         Returns:
             Dictionary with 'content' parameter
         """
         if isinstance(node, yaml.ScalarNode):
             content = loader.construct_scalar(node)
-            return {'content': content}
+            return {"content": content}
         else:
             raise ConstructorError(
-                directive_name='!expand',
+                directive_name="!expand",
                 message="!expand directive requires a string value",
-                location=getattr(node, 'start_mark', None)
+                location=getattr(node, "start_mark", None),
             )
-    
+
     def validate_parameters(self, params: Dict[str, Any]) -> None:
         """
         Validate extracted parameters.
-        
+
         Args:
             params: Dictionary of parameters to validate
-            
+
         Raises:
             ConstructorError: If parameters are invalid
         """
-        if 'content' not in params:
+        if "content" not in params:
             raise ConstructorError(
-                directive_name='!expand',
-                message="!expand directive requires content parameter"
+                directive_name="!expand",
+                message="!expand directive requires content parameter",
             )
-        
-        content = params['content']
+
+        content = params["content"]
         if not isinstance(content, str):
             raise ConstructorError(
-                directive_name='!expand',
-                message="!expand directive requires a string value"
+                directive_name="!expand",
+                message="!expand directive requires a string value",
             )
-    
+
     def execute(self, loader: yaml.SafeLoader, params: Dict[str, Any]) -> Any:
         """
         Execute the variable expansion.
-        
+
         Args:
             loader: YAML loader instance
             params: Dictionary of validated parameters
-            
+
         Returns:
             String with variables expanded
-            
+
         Raises:
             ConstructorError: If expansion fails
         """
-        content = params['content']
-        
+        content = params["content"]
+
         # Always defer expansion to post-processing to handle __vars metadata properly
-        return {'__smartyaml_expand_deferred': content}
+        return {"__smartyaml_expand_deferred": content}
 
 
 # Convenience function to create the constructor
 def expand_constructor(loader: yaml.SafeLoader, node: yaml.Node) -> Any:
     """
     Convenience function for the !expand constructor.
-    
+
     Args:
         loader: YAML loader instance
         node: YAML node containing the directive
-        
+
     Returns:
         Result from ExpandConstructor
     """

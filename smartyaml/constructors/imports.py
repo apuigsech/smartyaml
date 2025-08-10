@@ -2,68 +2,72 @@
 Import constructors for SmartYAML
 """
 
-import yaml
 from pathlib import Path
 from typing import Any, Dict
-from .base import FileBasedConstructor
-from ..utils.file_utils import read_file
-from ..utils.validation_utils import validate_filename
-from ..utils.loader_utils import create_loader_context
+
+import yaml
+
 from ..exceptions import SmartYAMLError
-from ..processing import ParameterExtractor, ParameterSpec, ParameterPattern, ParameterValidator
+from ..processing import (
+    ParameterExtractor,
+    ParameterPattern,
+    ParameterSpec,
+    ParameterValidator,
+)
+from ..utils.file_utils import read_file
+from ..utils.loader_utils import create_loader_context
+from ..utils.validation_utils import validate_filename
+from .base import FileBasedConstructor
 
 
 class ImportConstructor(FileBasedConstructor):
     """
     Constructor for !import filename directive.
     Loads the entire content of a file as a string.
-    
+
     This is a modernized example using the standardized parameter processing system.
     """
-    
+
     # Type specifications for automatic type conversion
-    TYPE_SPECS = {
-        'filename': str
-    }
-    
+    TYPE_SPECS = {"filename": str}
+
     def __init__(self):
         # Create parameter specification
         filename_spec = ParameterSpec(
-            name='filename',
+            name="filename",
             param_type=str,
             required=True,
-            validator=lambda f: validate_filename(f, '!import'),
-            description='The file path to import'
+            validator=lambda f: validate_filename(f, "!import"),
+            description="The file path to import",
         )
-        
+
         # Create parameter extractor for single scalar pattern
         extractor = ParameterExtractor(
-            pattern=ParameterPattern.SINGLE_SCALAR,
-            specs=[filename_spec]
+            pattern=ParameterPattern.SINGLE_SCALAR, specs=[filename_spec]
         )
-        
+
         # Create parameter validator
         validator = ParameterValidator.create_standard_validator(
-            required_params=['filename'],
-            type_specs={'filename': str},
-            custom_validators={'filename': lambda f: validate_filename(f, '!import')}
+            required_params=["filename"],
+            type_specs={"filename": str},
+            custom_validators={"filename": lambda f: validate_filename(f, "!import")},
         )
-        
-        super().__init__('!import', extractor, validator)
-    
+
+        super().__init__("!import", extractor, validator)
+
     def extract_parameters(self, loader, node) -> Dict[str, Any]:
         """Custom parameter extraction (empty since using standardized extractor)."""
         return {}
-    
+
     def validate_parameters(self, params: Dict[str, Any]) -> None:
         """Custom validation (empty since using standardized validator)."""
         pass
-    
+
     def execute(self, loader, params: Dict[str, Any]) -> str:
         """Load and return file content as string."""
-        file_path = params['resolved_file_path']
+        file_path = params["resolved_file_path"]
         loader_context = self.get_loader_context(loader)
-        return read_file(file_path, loader_context['max_file_size'])
+        return read_file(file_path, loader_context["max_file_size"])
 
 
 class ImportYamlConstructor(FileBasedConstructor):
@@ -71,41 +75,42 @@ class ImportYamlConstructor(FileBasedConstructor):
     Constructor for !import_yaml filename directive.
     Loads YAML content from file.
     """
-    
+
     def __init__(self):
-        super().__init__('!import_yaml')
-    
+        super().__init__("!import_yaml")
+
     def extract_parameters(self, loader, node) -> Dict[str, Any]:
         """Extract filename parameter from YAML node."""
         filename = loader.construct_scalar(node)
-        return {'filename': filename}
-    
+        return {"filename": filename}
+
     def validate_parameters(self, params: Dict[str, Any]) -> None:
         """Validate the filename parameter."""
-        validate_filename(params['filename'], self.directive_name)
-    
+        validate_filename(params["filename"], self.directive_name)
+
     def execute(self, loader, params: Dict[str, Any]) -> Any:
         """Load and return YAML data from file."""
-        file_path = params['resolved_file_path']
+        file_path = params["resolved_file_path"]
         loader_context = self.get_loader_context(loader)
-        
-        yaml_content = read_file(file_path, loader_context['max_file_size'])
-        
+
+        yaml_content = read_file(file_path, loader_context["max_file_size"])
+
         # Create a new loader with recursion tracking
         # Lazy import to avoid circular dependencies
         from ..loader import SmartYAMLLoader
-        new_import_stack = loader_context['import_stack'].copy()
+
+        new_import_stack = loader_context["import_stack"].copy()
         new_import_stack.add(file_path)
-        
+
         ConfiguredLoader = create_loader_context(
-            SmartYAMLLoader, 
-            loader_context['base_path'], 
-            loader_context['template_path'], 
+            SmartYAMLLoader,
+            loader_context["base_path"],
+            loader_context["template_path"],
             new_import_stack,
-            loader_context['max_file_size'], 
-            loader_context['max_recursion_depth']
+            loader_context["max_file_size"],
+            loader_context["max_recursion_depth"],
         )
-        
+
         return yaml.load(yaml_content, Loader=ConfiguredLoader)
 
 

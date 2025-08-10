@@ -2,16 +2,19 @@
 SmartYAML parsing system for YAML tags
 """
 
-from .tag_parser import TagParser, ParsedTag
 from .parameter_processors import (
-    ScalarParameterProcessor, 
-    CommaParameterProcessor,
     BracketParameterProcessor,
-    SmartParameterProcessor
+    CommaParameterProcessor,
+    ScalarParameterProcessor,
+    SmartParameterProcessor,
 )
+from .tag_parser import ParsedTag, TagParser
 
 __all__ = [
-    'TagParser', 'ParsedTag',
-    'ScalarParameterProcessor', 'CommaParameterProcessor', 'BracketParameterProcessor',
-    'SmartParameterProcessor'
+    "TagParser",
+    "ParsedTag",
+    "ScalarParameterProcessor",
+    "CommaParameterProcessor",
+    "BracketParameterProcessor",
+    "SmartParameterProcessor",
 ]
