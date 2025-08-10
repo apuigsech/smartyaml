@@ -14,6 +14,8 @@ SmartYAML extends standard YAML with powerful custom directives:
 - **!template(template_name)** - Template processing from centralized template directory
 - **!base64(data)** - Base64 encoding of strings
 - **!base64_decode(data)** - Base64 decoding of strings
+- **!expand(text)** - Variable substitution using `{{key}}` syntax
+- **Metadata fields** - `__field` prefixed fields for annotations (automatically removed)
 
 ## Installation
 
@@ -46,17 +48,23 @@ import smartyaml
 # Load a SmartYAML file
 data = smartyaml.load("config.yaml")
 
-# Load from string
+# Load from string with variables
 yaml_content = """
+__vars:
+  app: "MyApp"
+  
 database: !import_yaml db.yaml
   password: !env(DB_PASSWORD)
+  name: !expand "{{app}}_database"
 """
 data = smartyaml.load(yaml_content)
 
-# Load with custom options
+# Load with custom options and variables
+variables = {"environment": "production", "version": "2.0.0"}
 data = smartyaml.load('config.yaml',
                      base_path='/custom/path',
                      template_path='/templates',
+                     variables=variables,
                      max_file_size=5*1024*1024)
 ```
 
@@ -141,20 +149,88 @@ secret: !base64(my_secret_password)  # -> bXlfc2VjcmV0X3Bhc3N3b3Jk
 password: !base64_decode(bXlfc2VjcmV0X3Bhc3N3b3Jk)  # -> my_secret_password
 ```
 
+### 8. Variable Substitution: `!expand(text)`
+
+Replaces `{{key}}` patterns with variable values from function parameters or `__vars` metadata.
+
+```yaml
+# Using __vars metadata
+__vars:
+  app_name: "MyApp"
+  version: "1.0.0"
+  environment: "production"
+
+title: !expand "{{app_name}} v{{version}}"
+api_url: !expand "https://api-{{environment}}.example.com"
+```
+
+```python
+# Using function variables (override __vars)
+variables = {"app_name": "CustomApp", "version": "2.0.0"}
+data = smartyaml.load("config.yaml", variables=variables)
+```
+
+**Variable Priority:**
+1. Function parameters (highest priority)
+2. `__vars` metadata fields
+
+### 9. Metadata Fields
+
+Fields prefixed with `__` are automatically removed from the final result and serve as documentation/configuration.
+
+```yaml
+# Input
+__version: "1.2.3"        # Removed
+__build_date: 2024-01-15  # Removed
+app_name: "MyApp"         # Kept
+
+# Result: {"app_name": "MyApp"}
+```
+
+Metadata fields can contain SmartYAML directives:
+
+```yaml
+__vars:                   # Special metadata for variables
+  env: !env(ENVIRONMENT, "dev")
+  
+__build_info:            # Documentation metadata  
+  date: !env(BUILD_DATE)
+  
+app_url: !expand "https://{{env}}.example.com"
+```
+
 ## Complete Example
 
 ```yaml
-# config.yaml
-app:
-  name: MyApplication
-  version: !env(APP_VERSION, "1.0.0")
-  debug: !env(DEBUG, false)
+# config.yaml - Comprehensive SmartYAML demonstration
 
+# Variables and metadata for configuration
+__vars:
+  app_name: "MyApplication"
+  environment: !env(ENVIRONMENT, "development")
+  version: !env(APP_VERSION, "1.0.0")
+  
+__build_info:  # Documentation metadata (removed from final result)
+  date: !env(BUILD_DATE)
+  commit: !env(GIT_COMMIT, "unknown")
+
+# Application configuration with variable expansion
+app:
+  name: !expand "{{app_name}}"
+  full_title: !expand "{{app_name}} v{{version}}"
+  environment: !expand "{{environment}}"
+  debug: !env(DEBUG, false)
+  api_url: !expand "https://api-{{environment}}.example.com"
+
+# Database configuration using variables and imports
 database: !import_yaml(config/database.yaml)
   password: !env(DB_PASSWORD)
+  connection_string: !expand "postgresql://localhost/{{app_name}}_{{environment}}"
 
+# Template-based configuration
 cache: !template(redis)
 
+# Conditional configuration based on environment
 logging: !include_yaml_if(DEBUG, config/debug_logging.yaml)
 
 # Large SQL queries from external files
@@ -162,12 +238,33 @@ queries:
   get_users: !import(sql/users.sql)
   analytics: !import(sql/analytics.sql)
 
-# Secrets (base64 encoded for safety)
+# Secrets with encoding
 secrets:
   api_key: !base64_decode(YWJjZGVmZ2hpams=)
+  jwt_secret: !expand "{{app_name}}_secret_{{environment}}"
 
 # Development-only settings
 dev_tools: !include_if(DEVELOPMENT, dev_tools.txt)
+
+# Service configuration with variable expansion
+services:
+  api:
+    name: !expand "{{app_name}}-api"
+    image: !expand "{{app_name}}:{{version}}"
+    url: !expand "https://{{app_name}}-{{environment}}.example.com"
+```
+
+**Loading with custom variables:**
+
+```python
+import smartyaml
+
+# Load with default __vars
+data = smartyaml.load("config.yaml")
+
+# Override variables via function parameters
+custom_vars = {"environment": "production", "version": "2.0.0"}
+data = smartyaml.load("config.yaml", variables=custom_vars)
 ```
 
 ## Security Features

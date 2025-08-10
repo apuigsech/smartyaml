@@ -71,6 +71,7 @@ The library supports these custom YAML tags:
 - `!include_yaml_if(condition, file)`: Conditional YAML file inclusion
 - `!template(name)`: Load templates from `$SMARTYAML_TMPL` directory
 - `!base64(data)` / `!base64_decode(data)`: Base64 encoding/decoding
+- `!expand(text)`: Variable substitution using `{{key}}` syntax
 
 ### Metadata Fields
 
@@ -101,6 +102,72 @@ database:
 }
 ```
 
+### Variable Expansion
+
+SmartYAML supports variable substitution using the `!expand` directive and `{{key}}` syntax. Variables can be provided via function parameters or defined using the special `__vars` metadata field.
+
+**Features:**
+- Use `!expand "text with {{variables}}"` to substitute variables
+- Variables from `load()` function parameters take priority over `__vars` metadata
+- Variables can contain any data type (converted to string for substitution)
+- Supports escaping literal braces with `\\{{text}}`
+- Works with nested data structures and lists
+- Automatic error reporting for undefined variables
+
+**Variable Sources (priority order):**
+1. `variables` parameter passed to `load()` or `loads()` functions
+2. `__vars` metadata field in YAML (removed from final result)
+
+**Examples:**
+
+```python
+# Using function variables
+variables = {"name": "Alice", "env": "prod"}
+result = smartyaml.loads('greeting: !expand "Hello {{name}} in {{env}}!"', variables=variables)
+# Result: {"greeting": "Hello Alice in prod!"}
+
+# Using __vars metadata
+yaml_content = '''
+__vars:
+  app: "MyApp"  
+  version: "2.1.0"
+
+title: !expand "{{app}} v{{version}}"
+endpoint: !expand "https://api.{{app}}.com"
+'''
+result = smartyaml.loads(yaml_content)
+# Result: {"title": "MyApp v2.1.0", "endpoint": "https://api.MyApp.com"}
+
+# Function variables override __vars
+yaml_content = '''
+__vars:
+  env: "development"
+  
+config: !expand "Running in {{env}} mode"
+'''
+result = smartyaml.loads(yaml_content, variables={"env": "production"})
+# Result: {"config": "Running in production mode"}
+```
+
+**Integration with Other Directives:**
+Variables work seamlessly with other SmartYAML features:
+
+```yaml
+__vars:
+  config_file: "database"
+  environment: "prod"
+  
+# Variable expansion in file imports
+database: !import_yaml("{{config_file}}_{{environment}}.yaml")
+
+# Variable expansion with environment variables  
+connection: !expand "host={{database_host}}"
+database_host: !env(DB_HOST, "localhost")
+
+# Variable expansion in conditional includes
+debug_config: !include_yaml_if(DEBUG, "debug_{{environment}}.yaml")
+```
+
 ### Testing Structure
 
 Tests are organized by constructor type:
@@ -108,6 +175,7 @@ Tests are organized by constructor type:
 - `tests/test_environment.py`: Environment variable handling
 - `tests/test_conditional.py`: Conditional inclusion logic
 - `tests/test_encoding.py`: Base64 encoding/decoding
+- `tests/test_expansion.py`: Variable expansion functionality
 - `tests/test_metadata.py`: Metadata field removal functionality
 - `tests/test_advanced_features.py`: Advanced testing scenarios
 - `tests/fixtures/`: Test YAML files and sample data

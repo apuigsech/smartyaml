@@ -180,6 +180,7 @@ def register_default_constructors() -> None:
         template_constructor,
         base64_constructor,
         base64_decode_constructor,
+        expand_constructor,
     )
     
     constructors = {
@@ -191,6 +192,7 @@ def register_default_constructors() -> None:
         '!template': template_constructor,
         '!base64': base64_constructor,
         '!base64_decode': base64_decode_constructor,
+        '!expand': expand_constructor,
     }
     
     _registry.register_multiple(constructors)

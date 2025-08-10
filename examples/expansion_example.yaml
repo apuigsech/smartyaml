@@ -1,0 +1,78 @@
+# SmartYAML Variable Expansion Example
+# This demonstrates the !expand directive and __vars metadata
+
+# Define variables using __vars metadata (these will be removed from final result)
+__vars:
+  app_name: "ExpandDemo"
+  environment: "development"
+  version: "2.0.1"
+  database_host: "localhost"
+  database_port: 5432
+
+# Application configuration with variable expansion
+application:
+  name: !expand "{{app_name}}"
+  full_title: !expand "{{app_name}} v{{version}}"
+  environment: !expand "{{environment}}"
+  
+  # Nested expansion in complex strings
+  welcome_message: !expand "Welcome to {{app_name}} running in {{environment}} mode!"
+  
+  # Variables can be used in paths and URLs
+  log_file: !expand "/var/log/{{app_name}}/{{environment}}.log"
+  api_endpoint: !expand "https://api-{{environment}}.example.com/{{app_name}}/v1"
+
+# Database configuration using variables
+database:
+  connection_string: !expand "postgresql://{{database_host}}:{{database_port}}/{{app_name}}_{{environment}}"
+  pool_name: !expand "{{app_name}}_pool"
+  
+  # Some values don't use expansion
+  max_connections: 20
+  timeout: 30
+
+# Feature flags using variables
+features:
+  - name: "debug_mode"
+    enabled: !expand "{{environment}}"  # Will expand to "development" 
+    description: !expand "Debug mode for {{environment}} environment"
+  
+  - name: "caching"
+    enabled: true
+    cache_prefix: !expand "{{app_name}}_cache"
+
+# Demonstrating conditional content based on variables
+monitoring:
+  enabled: !expand "{{environment}}"
+  service_name: !expand "{{app_name}}_monitor"
+  
+  # Different settings per environment
+  alerting:
+    email: !expand "alerts-{{environment}}@example.com"
+    severity: !expand "{{environment}}"
+
+# Variables in complex nested structures
+services:
+  api:
+    name: !expand "{{app_name}}-api"
+    image: !expand "{{app_name}}:{{version}}"
+    environment:
+      APP_NAME: !expand "{{app_name}}"
+      APP_VERSION: !expand "{{version}}"
+      DATABASE_URL: !expand "postgresql://{{database_host}}:{{database_port}}/{{app_name}}_{{environment}}"
+  
+  web:
+    name: !expand "{{app_name}}-web"
+    image: !expand "{{app_name}}-frontend:{{version}}"
+    public_url: !expand "https://{{app_name}}-{{environment}}.example.com"
+
+# Metadata that gets removed but won't affect expansion
+__build_info:
+  timestamp: "2024-01-15T10:30:00Z"
+  commit: "abc123def456"
+  builder: "CI/CD Pipeline"
+
+# No expansion without !expand directive (these remain literal)
+documentation:
+  template_syntax: "Use {{variable}} syntax with !expand directive"
+  example: "message: !expand \"Hello {{name}}!\""
