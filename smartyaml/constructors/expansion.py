@@ -113,14 +113,32 @@ class ExpandConstructor(BaseConstructor):
             params: Dictionary of validated parameters
 
         Returns:
-            String with variables expanded
+            String with variables expanded or deferred expansion marker
 
         Raises:
             ConstructorError: If expansion fails
         """
         content = params["content"]
 
-        # Always defer expansion to post-processing to handle __vars metadata properly
+        # Check if the loader has expansion variables available
+        if hasattr(loader, 'expansion_variables') and loader.expansion_variables:
+            try:
+                # Try immediate expansion if variables are available
+                engine = VariableSubstitutionEngine(loader.expansion_variables)
+                
+                # Only expand if all required variables are available
+                required_vars = engine.extract_variable_names(content)
+                missing_vars = [var for var in required_vars if var not in loader.expansion_variables]
+                
+                if not missing_vars:
+                    # All variables available, expand immediately
+                    return engine.substitute_string(content)
+                # If some variables are missing, fall through to deferred expansion
+            except Exception:
+                # If immediate expansion fails, fall through to deferred expansion
+                pass
+
+        # Defer expansion to post-processing to handle __vars metadata
         return {"__smartyaml_expand_deferred": content}
 
 

@@ -74,7 +74,7 @@ class TemplateConstructor(FileBasedConstructor):
         params["resolved_file_path"] = template_file_resolved
 
     def execute(self, loader, params: Dict[str, Any]) -> Any:
-        """Load and parse template YAML file."""
+        """Load and parse template YAML file with variable accumulation."""
         template_file = params["resolved_file_path"]
         template_base = params["template_base"]
         loader_context = self.get_loader_context(loader)
@@ -82,7 +82,7 @@ class TemplateConstructor(FileBasedConstructor):
         # Read template file content
         yaml_content = read_file(template_file, loader_context["max_file_size"])
 
-        # Create a new loader with recursion tracking
+        # Create a new loader with recursion tracking and parent context inheritance
         # Lazy import to avoid circular dependencies
         from ..loader import SmartYAMLLoader
 
@@ -96,9 +96,20 @@ class TemplateConstructor(FileBasedConstructor):
             new_import_stack,
             loader_context["max_file_size"],
             loader_context["max_recursion_depth"],
+            None,  # No expansion variables needed
+            loader,  # Pass parent loader for variable inheritance
         )
 
-        return yaml.load(yaml_content, Loader=ConfiguredLoader)
+        # Load template 
+        result = yaml.load(yaml_content, Loader=ConfiguredLoader)
+        
+        # Extract __vars from the loaded template and accumulate them in parent loader
+        if isinstance(result, dict) and '__vars' in result:
+            template_vars = result['__vars']
+            if isinstance(template_vars, dict) and hasattr(loader, 'accumulate_vars'):
+                loader.accumulate_vars(template_vars)
+        
+        return result
 
 
 # Create instance for registration

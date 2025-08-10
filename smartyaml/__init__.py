@@ -162,26 +162,36 @@ def load(
             self.import_stack = set()
             self.max_file_size = max_file_size
             self.max_recursion_depth = max_recursion_depth
-            # Start with function variables, will be updated with __vars during parsing
+            # Initialize expansion_variables with function variables
             self.expansion_variables = variables or {}
+            # Initialize accumulated_vars with function variables as base
+            self.accumulated_vars = (variables or {}).copy()
 
-    result = yaml.load(content, Loader=ConfiguredSmartYAMLLoader)
+    # Load with the configured loader that will accumulate variables
+    # Store reference to the loader instance so we can access accumulated_vars
+    _loader_instance = None
+    
+    class LoaderWrapper(ConfiguredSmartYAMLLoader):
+        def __init__(self, stream):
+            super().__init__(stream)
+            nonlocal _loader_instance
+            _loader_instance = self
+    
+    result = yaml.load(content, Loader=LoaderWrapper)
+    accumulated_variables = _loader_instance.accumulated_vars if _loader_instance else {}
+    
+    # Also accumulate variables from the root result itself
+    if isinstance(result, dict) and '__vars' in result:
+        root_vars = result['__vars']
+        if isinstance(root_vars, dict):
+            accumulated_variables.update(root_vars)
+    
 
-    # Extract __vars metadata after parsing and update variables if needed
-    from .utils.variable_substitution import (
-        VariableSubstitutionEngine,
-        extract_vars_metadata,
-    )
-
-    vars_metadata = extract_vars_metadata(result)
-
-    # Process deferred expansions if any __vars were found or variables were provided
-    if vars_metadata or variables:
-        engine = VariableSubstitutionEngine()
-        merged_variables = engine.merge_variables(vars_metadata, variables)
-        result = process_deferred_expansions(result, merged_variables)
+    # Process deferred expansions with accumulated variables
+    if accumulated_variables:
+        result = process_deferred_expansions(result, accumulated_variables)
     else:
-        # Process deferred expansions with no variables (will raise errors if needed)
+        # Process deferred expansions with no variables (will raise errors if needed)  
         result = process_deferred_expansions(result, {})
 
     # Remove metadata fields if requested (this removes __vars)
@@ -228,24 +238,44 @@ def loads(
             self.import_stack = set()
             self.max_file_size = max_file_size
             self.max_recursion_depth = max_recursion_depth
-            # Start with function variables, will be updated with __vars during parsing
+            # Initialize expansion_variables with function variables
             self.expansion_variables = variables or {}
+            # Initialize accumulated_vars with function variables as base
+            self.accumulated_vars = (variables or {}).copy()
 
-    result = yaml.load(content, Loader=ConfiguredSmartYAMLLoader)
-
-    # Extract __vars metadata after parsing and update variables if needed
-    from .utils.variable_substitution import (
-        VariableSubstitutionEngine,
-        extract_vars_metadata,
-    )
-
-    vars_metadata = extract_vars_metadata(result)
-
-    # Process deferred expansions if any __vars were found or variables were provided
-    if vars_metadata or variables:
-        engine = VariableSubstitutionEngine()
-        merged_variables = engine.merge_variables(vars_metadata, variables)
-        result = process_deferred_expansions(result, merged_variables)
+    # Load with the configured loader that will accumulate variables
+    # Store reference to the loader instance so we can access accumulated_vars
+    _loader_instance = None
+    
+    class LoaderWrapper(ConfiguredSmartYAMLLoader):
+        def __init__(self, stream):
+            super().__init__(stream)
+            nonlocal _loader_instance
+            _loader_instance = self
+    
+    result = yaml.load(content, Loader=LoaderWrapper)
+    accumulated_variables = _loader_instance.accumulated_vars if _loader_instance else {}
+    
+    # Also accumulate variables from the root result itself
+    if isinstance(result, dict) and '__vars' in result:
+        root_vars = result['__vars']
+        if isinstance(root_vars, dict):
+            accumulated_variables.update(root_vars)
+    
+    # Process deferred expansions with accumulated variables
+    if accumulated_variables:
+        # First, expand any deferred expansions in the accumulated variables themselves
+        # This may need multiple passes as variables reference each other
+        max_iterations = 10  # Prevent infinite loops
+        for i in range(max_iterations):
+            expanded_vars = process_deferred_expansions(accumulated_variables, accumulated_variables)
+            if expanded_vars == accumulated_variables:
+                # No more changes, we're done
+                break
+            accumulated_variables = expanded_vars
+        
+        # Now process deferred expansions in the main result using the fully expanded variables
+        result = process_deferred_expansions(result, accumulated_variables)
     else:
         # Process deferred expansions with no variables (will raise errors if needed)
         result = process_deferred_expansions(result, {})
@@ -255,6 +285,7 @@ def loads(
         result = remove_metadata_fields(result)
 
     return result
+
 
 
 def dump(

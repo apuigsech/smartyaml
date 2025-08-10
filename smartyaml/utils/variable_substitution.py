@@ -45,6 +45,17 @@ class VariableSubstitutionEngine:
         if not isinstance(text, str):
             return text
 
+        # Special case: if the entire text is a single variable reference {{var}}
+        # and the value is a dictionary (like deferred expansion), return the dict directly
+        match = self.VARIABLE_PATTERN.fullmatch(text)
+        if match:
+            var_name = match.group(1).strip()
+            if var_name in self.variables:
+                value = self.variables[var_name]
+                # Return dictionaries directly (for deferred expansions)
+                if isinstance(value, dict):
+                    return value
+
         def replace_variable(match):
             var_name = match.group(1).strip()
             if var_name not in self.variables:

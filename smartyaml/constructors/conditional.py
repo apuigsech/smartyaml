@@ -96,9 +96,19 @@ class IncludeYamlIfConstructor(ConditionalConstructor):
             new_import_stack,
             loader_context["max_file_size"],
             loader_context["max_recursion_depth"],
+            None,  # No expansion variables needed
+            loader,  # Pass parent loader for variable inheritance
         )
 
-        return yaml.load(yaml_content, Loader=ConfiguredLoader)
+        result = yaml.load(yaml_content, Loader=ConfiguredLoader)
+        
+        # Extract __vars from the imported file and accumulate them in parent loader
+        if isinstance(result, dict) and '__vars' in result:
+            import_vars = result['__vars']
+            if isinstance(import_vars, dict) and hasattr(loader, 'accumulate_vars'):
+                loader.accumulate_vars(import_vars)
+        
+        return result
 
 
 # Create instances for registration

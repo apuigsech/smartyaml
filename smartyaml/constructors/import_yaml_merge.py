@@ -143,9 +143,17 @@ class ImportYamlMergeConstructor(FileBasedConstructor):
             new_import_stack,
             loader_context["max_file_size"],
             loader_context["max_recursion_depth"],
+            None,  # No expansion variables needed  
+            loader,  # Pass parent loader for variable inheritance
         )
 
         imported_data = yaml.load(yaml_content, Loader=ConfiguredLoader)
+        
+        # Extract __vars from the imported file and accumulate them in parent loader
+        if isinstance(imported_data, dict) and '__vars' in imported_data:
+            import_vars = imported_data['__vars']
+            if isinstance(import_vars, dict) and hasattr(loader, 'accumulate_vars'):
+                loader.accumulate_vars(import_vars)
 
         # Merge with local data if present
         return merge_yaml_data(imported_data, local_data)

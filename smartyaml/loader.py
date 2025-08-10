@@ -5,7 +5,7 @@ SmartYAML Loader with custom constructors
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import yaml
 
@@ -27,6 +27,29 @@ class SmartYAMLLoader(yaml.SafeLoader):
         # Set default paths
         self.base_path: Optional[Path] = None
         self.template_path: Optional[Path] = None
+        
+        # Global variable context for accumulating __vars during loading
+        self.accumulated_vars: Dict[str, Any] = {}
+
+    def accumulate_vars(self, new_vars: Dict[str, Any]) -> None:
+        """
+        Accumulate variables into the global context.
+        Child variables override parent variables.
+        
+        Args:
+            new_vars: Dictionary of variables to accumulate
+        """
+        if new_vars and isinstance(new_vars, dict):
+            self.accumulated_vars.update(new_vars)
+    
+    def get_accumulated_vars(self) -> Dict[str, Any]:
+        """
+        Get all accumulated variables.
+        
+        Returns:
+            Dictionary of all accumulated variables
+        """
+        return self.accumulated_vars.copy()
 
     def construct_mapping(self, node, deep=False):
         """
