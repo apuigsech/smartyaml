@@ -8,34 +8,45 @@ from typing import Any, Dict, Optional, Union
 import yaml
 
 from .content_reader import ContentReader
+from .inline_template_processor import InlineTemplateProcessor
 from .template_preprocessor import TemplatePreprocessor
 from .variable_merger import VariableMerger
 
-# Global singleton components for performance optimization
-_content_reader = None
-_template_preprocessor = None  
-_variable_merger = None
+class _ComponentSingletons:
+    """Singleton manager for pipeline components to optimize performance."""
+    
+    def __init__(self):
+        self._content_reader = None
+        self._inline_template_processor = None
+        self._template_preprocessor = None  
+        self._variable_merger = None
+    
+    def get_content_reader(self) -> ContentReader:
+        """Get singleton ContentReader instance."""
+        if self._content_reader is None:
+            self._content_reader = ContentReader()
+        return self._content_reader
+    
+    def get_template_preprocessor(self) -> TemplatePreprocessor:
+        """Get singleton TemplatePreprocessor instance."""
+        if self._template_preprocessor is None:
+            self._template_preprocessor = TemplatePreprocessor()
+        return self._template_preprocessor
+    
+    def get_inline_template_processor(self) -> InlineTemplateProcessor:
+        """Get singleton InlineTemplateProcessor instance."""
+        if self._inline_template_processor is None:
+            self._inline_template_processor = InlineTemplateProcessor()
+        return self._inline_template_processor
+    
+    def get_variable_merger(self) -> VariableMerger:
+        """Get singleton VariableMerger instance."""
+        if self._variable_merger is None:
+            self._variable_merger = VariableMerger()
+        return self._variable_merger
 
-def get_content_reader() -> ContentReader:
-    """Get singleton ContentReader instance."""
-    global _content_reader
-    if _content_reader is None:
-        _content_reader = ContentReader()
-    return _content_reader
-
-def get_template_preprocessor() -> TemplatePreprocessor:
-    """Get singleton TemplatePreprocessor instance."""
-    global _template_preprocessor
-    if _template_preprocessor is None:
-        _template_preprocessor = TemplatePreprocessor()
-    return _template_preprocessor
-
-def get_variable_merger() -> VariableMerger:
-    """Get singleton VariableMerger instance."""
-    global _variable_merger
-    if _variable_merger is None:
-        _variable_merger = VariableMerger()
-    return _variable_merger
+# Single instance of the component manager
+_singletons = _ComponentSingletons()
 
 
 class LoadPipeline:
@@ -49,6 +60,7 @@ class LoadPipeline:
     def __init__(
         self,
         content_reader: Optional[ContentReader] = None,
+        inline_template_processor: Optional[InlineTemplateProcessor] = None,
         template_preprocessor: Optional[TemplatePreprocessor] = None,
         variable_merger: Optional[VariableMerger] = None
     ):
@@ -60,12 +72,14 @@ class LoadPipeline:
         
         Args:
             content_reader: Content reading component
+            inline_template_processor: Inline template processing component
             template_preprocessor: Template preprocessing component
             variable_merger: Variable merging component
         """
-        self.content_reader = content_reader or get_content_reader()
-        self.template_preprocessor = template_preprocessor or get_template_preprocessor()
-        self.variable_merger = variable_merger or get_variable_merger()
+        self.content_reader = content_reader or _singletons.get_content_reader()
+        self.inline_template_processor = inline_template_processor or _singletons.get_inline_template_processor()
+        self.template_preprocessor = template_preprocessor or _singletons.get_template_preprocessor()
+        self.variable_merger = variable_merger or _singletons.get_variable_merger()
     
     def load(
         self,
@@ -102,6 +116,14 @@ class LoadPipeline:
             content, Path(template_path) if template_path else None
         )
         
+        # Step 2.5: Process inline templates before main YAML parsing
+        processed_content = self.template_preprocessor.process_inline_templates(
+            processed_content,
+            resolved_base_path,
+            Path(template_path) if template_path else None,
+            variables
+        )
+        
         # Step 3: Create and configure loader
         loader_instance = self._create_loader(
             resolved_base_path=resolved_base_path,
@@ -115,17 +137,22 @@ class LoadPipeline:
         # Step 4: Parse YAML
         result = yaml.load(processed_content, Loader=loader_instance)
         
-        # Step 5: Process variables
+        # Step 5: Process variables (needed before template processing)
+        # Get the actual loader instance that was used during parsing
+        actual_loader_instance = loader_instance._get_captured_instance()
         accumulated_variables = self.variable_merger.process_accumulated_variables(
-            loader_instance._wrapped_loader_instance if hasattr(loader_instance, '_wrapped_loader_instance') else None,
+            actual_loader_instance,  # Pass actual loader instance from parsing
             result,
             variables
         )
         
-        # Step 6: Handle deferred expansions
+        # Step 6: Process inline templates (__template directive)
+        result = self._process_inline_template(result, resolved_base_path, template_path, accumulated_variables)
+        
+        # Step 7: Handle deferred expansions
         result = self._process_expansions(result, accumulated_variables)
         
-        # Step 7: Remove metadata if requested
+        # Step 8: Remove metadata if requested
         if remove_metadata:
             result = self._remove_metadata_fields(result)
         
@@ -158,14 +185,40 @@ class LoadPipeline:
                 if template_anchors:
                     self.anchors.update(template_anchors)
         
-        # Wrapper to capture loader instance for variable processing
+        # Store captured loader instance at module level for variable processing
+        _captured_loader_instance = None
+        
         class LoaderWrapper(ConfiguredSmartYAMLLoader):
             def __init__(self, stream):
                 super().__init__(stream)
                 # Store reference for variable processing
-                LoaderWrapper._wrapped_loader_instance = self
+                nonlocal _captured_loader_instance
+                _captured_loader_instance = self
+        
+        # Store the capture reference on the class for pipeline access
+        LoaderWrapper._get_captured_instance = lambda: _captured_loader_instance
         
         return LoaderWrapper
+    
+    def _process_inline_template(
+        self, 
+        result: Any, 
+        resolved_base_path: Path,
+        template_path: Optional[Path],
+        accumulated_variables: Dict[str, Any]
+    ) -> Any:
+        """Process inline templates (__template directive)."""
+        if not self.inline_template_processor.has_inline_template(result):
+            return result
+            
+        # Build loader context for template processing
+        loader_context = {
+            "base_path": resolved_base_path,
+            "template_path": template_path,
+            "variables": accumulated_variables  # Use accumulated variables including __vars
+        }
+        
+        return self.inline_template_processor.process_inline_template(result, loader_context)
     
     def _process_expansions(self, result: Any, accumulated_variables: Dict[str, Any]) -> Any:
         """Process deferred variable expansions."""

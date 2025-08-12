@@ -24,8 +24,8 @@ class VariableMerger:
         
         Precedence order (highest to lowest):
         1. Function variables (passed as parameters)
-        2. Accumulated variables (from loader)
-        3. Document __vars (from YAML metadata)
+        2. Document __vars (from YAML metadata)
+        3. Accumulated variables (from imported templates)
         
         Args:
             function_variables: Variables passed to load/loads functions
@@ -35,15 +35,15 @@ class VariableMerger:
         Returns:
             Merged variables dictionary with proper precedence
         """
-        # Start with document vars as base (lowest precedence)
+        # Start with accumulated vars as base (lowest precedence)
         merged_vars = {}
         
-        if document_vars and isinstance(document_vars, dict):
-            merged_vars.update(document_vars)
-        
-        # Add accumulated variables (medium precedence)
         if accumulated_variables and isinstance(accumulated_variables, dict):
             merged_vars.update(accumulated_variables)
+        
+        # Add document variables (medium precedence)
+        if document_vars and isinstance(document_vars, dict):
+            merged_vars.update(document_vars)
         
         # Add function variables (highest precedence)  
         if function_variables and isinstance(function_variables, dict):
@@ -73,10 +73,9 @@ class VariableMerger:
         if loader_instance and hasattr(loader_instance, 'accumulated_vars'):
             accumulated_variables = loader_instance.accumulated_vars or {}
         
-        # Extract variables from root result
-        document_vars = None
-        if isinstance(result, dict) and '__vars' in result:
-            document_vars = result['__vars']
+        # Extract variables from root result using shared utility
+        from ..utils.variable_substitution import extract_vars_metadata
+        document_vars = extract_vars_metadata(result)
         
         # Merge with proper precedence
         return self.merge_variables(

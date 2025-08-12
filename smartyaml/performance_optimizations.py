@@ -15,6 +15,14 @@ class OptimizedPatterns:
     ENV_VAR_PATTERN: Pattern = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
     FILENAME_PATTERN: Pattern = re.compile(r'^[^<>:"|?*\x00-\x1f]+$')
     TEMPLATE_NAME_PATTERN: Pattern = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
+    
+    # YAML parsing patterns
+    TEMPLATE_DIRECTIVE_PATTERN: Pattern = re.compile(r'^\s*__template\s*:', re.MULTILINE)
+    VARS_SECTION_PATTERN: Pattern = re.compile(r'^__vars:\s*\n((?:[ ]{2}.*\n)*)', re.MULTILINE)
+    
+    # Template processing patterns
+    TEMPLATE_REFERENCE_PATTERN: Pattern = re.compile(r'!template\s*\([^)]+\)|<<:\s*!template\s*\([^)]+\)')
+    TEMPLATE_NAME_EXTRACT_PATTERN: Pattern = re.compile(r'!template\s*\(\s*([^)]+)\s*\)')
 
     # Common string operations
     SAFE_PATH_CHARS: Set[str] = set(
@@ -30,6 +38,30 @@ class OptimizedPatterns:
     def is_safe_filename(filename: str) -> bool:
         """Optimized filename validation."""
         return bool(OptimizedPatterns.FILENAME_PATTERN.match(filename))
+
+    @staticmethod
+    def has_template_directive(yaml_content: str) -> bool:
+        """Optimized check for __template directive in YAML content."""
+        return bool(OptimizedPatterns.TEMPLATE_DIRECTIVE_PATTERN.search(yaml_content))
+
+    @staticmethod
+    def extract_vars_section(yaml_content: str) -> Optional[str]:
+        """Optimized extraction of __vars section from YAML content."""
+        match = OptimizedPatterns.VARS_SECTION_PATTERN.search(yaml_content)
+        if match:
+            return '__vars:\n' + match.group(1)
+        return None
+
+    @staticmethod
+    def has_template_references(content: str) -> bool:
+        """Optimized check for !template directive references in content."""
+        return bool(OptimizedPatterns.TEMPLATE_REFERENCE_PATTERN.search(content))
+
+    @staticmethod
+    def extract_template_names(content: str) -> list:
+        """Optimized extraction of template names from !template directives."""
+        matches = OptimizedPatterns.TEMPLATE_NAME_EXTRACT_PATTERN.findall(content)
+        return [match.strip() for match in matches]
 
 
 class CachedOperations:

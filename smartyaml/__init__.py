@@ -3,7 +3,7 @@ SmartYAML - Extended YAML format with custom directives
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import yaml
 
@@ -52,12 +52,14 @@ def remove_metadata_fields(data: Any) -> Any:
     Returns:
         The data structure with all metadata fields removed
     """
+    METADATA_PREFIX = "__"
+    
     if isinstance(data, dict):
         # Remove keys starting with "__" and recursively process remaining values
         return {
             key: remove_metadata_fields(value)
             for key, value in data.items()
-            if not key.startswith("__")
+            if not key.startswith(METADATA_PREFIX)
         }
     elif isinstance(data, list):
         # Recursively process list items
@@ -78,10 +80,12 @@ def process_deferred_expansions(data: Any, variables: Dict[str, Any]) -> Any:
     Returns:
         Data structure with deferred expansions processed
     """
+    from .constants import DEFERRED_EXPANSION_KEY
+    
     if isinstance(data, dict):
-        if "__smartyaml_expand_deferred" in data and len(data) == 1:
+        if DEFERRED_EXPANSION_KEY in data and len(data) == 1:
             # This is a deferred expansion marker
-            content = data["__smartyaml_expand_deferred"]
+            content = data[DEFERRED_EXPANSION_KEY]
             if variables:
                 from .utils.variable_substitution import VariableSubstitutionEngine
 

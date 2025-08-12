@@ -48,13 +48,16 @@ class ImportYamlMergeConstructor(FileBasedConstructor):
             return self.post_process(result, params)
 
         except Exception as e:
-            # Handle errors with context
-            context = self.build_error_context(
-                loader, params if "params" in locals() else {}
+            # Handle errors with enhanced context
+            from ..error_context import ErrorContextBuilder, enhance_error_with_context
+            
+            context = ErrorContextBuilder.build_constructor_context(
+                self.directive_name,
+                loader,
+                params if "params" in locals() else {},
+                node,
             )
-            from ..utils.validation_utils import add_context_to_error
-
-            raise add_context_to_error(e, context) from e
+            raise enhance_error_with_context(e, context) from e
 
     def extract_parameters_with_suffix(
         self, loader, tag_suffix, node
@@ -129,31 +132,24 @@ class ImportYamlMergeConstructor(FileBasedConstructor):
 
         yaml_content = read_file(file_path, loader_context["max_file_size"])
 
-        # Create a new loader with recursion tracking
-        # Lazy import to avoid circular dependencies
+        # Use shared YAML parsing utility
+        from ..utils.yaml_parsing import load_yaml_with_context, create_import_stack_copy
         from ..loader import SmartYAMLLoader
 
-        new_import_stack = loader_context["import_stack"].copy()
-        new_import_stack.add(file_path)
+        new_import_stack = create_import_stack_copy(loader_context, file_path)
 
-        ConfiguredLoader = create_loader_context(
-            SmartYAMLLoader,
-            loader_context["base_path"],
-            loader_context["template_path"],
-            new_import_stack,
-            loader_context["max_file_size"],
-            loader_context["max_recursion_depth"],
-            None,  # No expansion variables needed  
-            loader,  # Pass parent loader for variable inheritance
+        imported_data = load_yaml_with_context(
+            yaml_content=yaml_content,
+            loader_class=SmartYAMLLoader,
+            base_path=loader_context["base_path"],
+            template_path=loader_context["template_path"],
+            import_stack=new_import_stack,
+            max_file_size=loader_context["max_file_size"],
+            max_recursion_depth=loader_context["max_recursion_depth"],
+            expansion_variables=None,  # No expansion variables needed
+            parent_loader=loader,  # Pass parent loader for variable inheritance
+            accumulate_vars=True
         )
-
-        imported_data = yaml.load(yaml_content, Loader=ConfiguredLoader)
-        
-        # Extract __vars from the imported file and accumulate them in parent loader
-        if isinstance(imported_data, dict) and '__vars' in imported_data:
-            import_vars = imported_data['__vars']
-            if isinstance(import_vars, dict) and hasattr(loader, 'accumulate_vars'):
-                loader.accumulate_vars(import_vars)
 
         # Merge with local data if present
         return merge_yaml_data(imported_data, local_data)

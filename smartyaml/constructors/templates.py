@@ -30,17 +30,14 @@ class TemplatePreProcessor:
     @staticmethod
     def should_preprocess_document(content: str) -> bool:
         """Check if document contains template directives that need preprocessing."""
-        # Look for !template directives in the document
-        template_pattern = r'!template\s*\([^)]+\)|<<:\s*!template\s*\([^)]+\)'
-        return bool(re.search(template_pattern, content))
+        from ..performance_optimizations import optimized_patterns
+        return optimized_patterns.has_template_references(content)
     
     @staticmethod
     def extract_template_references(content: str) -> List[str]:
         """Extract template names from !template directives in the document."""
-        # Pattern to match both !template(name) and <<: !template(name)
-        template_pattern = r'!template\s*\(\s*([^)]+)\s*\)'
-        matches = re.findall(template_pattern, content)
-        return [match.strip() for match in matches]
+        from ..performance_optimizations import optimized_patterns
+        return optimized_patterns.extract_template_names(content)
     
     def preprocess_document_for_anchors(self, content: str, loader_context) -> Tuple[str, Dict[str, Any]]:
         """
