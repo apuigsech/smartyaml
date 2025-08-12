@@ -44,7 +44,11 @@ class TestExpandConstructor:
         with pytest.raises(Exception) as excinfo:
             smartyaml.loads(yaml_content)
         
-        assert "variables ['missing'] but no variables provided" in str(excinfo.value)
+        # Test for enhanced error message with debugging info
+        error_msg = str(excinfo.value)
+        assert "Variable expansion failed" in error_msg
+        assert "Variables found in content: ['missing']" in error_msg
+        assert "No variables provided to SmartYAML" in error_msg
     
     def test_escaped_braces(self):
         """Test escaping literal braces"""

@@ -2,8 +2,9 @@
 Template constructor for SmartYAML
 """
 
+import re
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 import yaml
 
@@ -16,9 +17,142 @@ from ..utils.validation_utils import (
     validate_template_path,
 )
 from .base import FileBasedConstructor
+from .yaml_file_loader import YamlFileLoaderMixin
 
 
-class TemplateConstructor(FileBasedConstructor):
+class TemplatePreProcessor:
+    """
+    Pre-processes templates to enable cross-file anchor sharing.
+    This solves the timing issue where anchor references are resolved 
+    during composition but templates are loaded during construction.
+    """
+    
+    @staticmethod
+    def should_preprocess_document(content: str) -> bool:
+        """Check if document contains template directives that need preprocessing."""
+        # Look for !template directives in the document
+        template_pattern = r'!template\s*\([^)]+\)|<<:\s*!template\s*\([^)]+\)'
+        return bool(re.search(template_pattern, content))
+    
+    @staticmethod
+    def extract_template_references(content: str) -> List[str]:
+        """Extract template names from !template directives in the document."""
+        # Pattern to match both !template(name) and <<: !template(name)
+        template_pattern = r'!template\s*\(\s*([^)]+)\s*\)'
+        matches = re.findall(template_pattern, content)
+        return [match.strip() for match in matches]
+    
+    def preprocess_document_for_anchors(self, content: str, loader_context) -> Tuple[str, Dict[str, Any]]:
+        """
+        Pre-process document to extract template anchors and make them available.
+        Returns modified content and collected template anchors.
+        """
+        # Extract template references from the document
+        template_names = self.extract_template_references(content)
+        
+        if not template_names:
+            return content, {}
+        
+        # Collect all template anchors
+        all_template_anchors = {}
+        
+        for template_name in template_names:
+            try:
+                template_anchors = self._extract_anchors_from_template(
+                    template_name, loader_context
+                )
+                all_template_anchors.update(template_anchors)
+            except Exception:
+                # If template loading fails, we'll let the normal template
+                # constructor handle the error during actual loading
+                continue
+        
+        return content, all_template_anchors
+    
+    def _extract_anchors_from_template(self, template_name: str, loader_context) -> Dict[str, Any]:
+        """Extract anchors from a specific template file."""
+        try:
+            # Validate template name
+            validate_template_name(template_name, "!template")
+            
+            # Get and validate template base path
+            template_base = validate_template_path(loader_context["template_path"])
+            
+            # Construct full path to template file  
+            template_file = template_base / f"{template_name}.yaml"
+            template_file_resolved = template_file.resolve()
+            
+            # Security check
+            template_base_resolved = template_base.resolve()
+            try:
+                template_file_resolved.relative_to(template_base_resolved)
+            except ValueError:
+                from ..exceptions import InvalidPathError
+                raise InvalidPathError(
+                    f"Template path '{template_name}' resolves outside the template directory"
+                )
+            
+            # Read template file
+            yaml_content = read_file(template_file_resolved, loader_context["max_file_size"])
+            
+            # Create simple loader to extract anchors
+            from ..loader import SmartYAMLLoader
+            
+            # Create extraction loader that captures anchors during composition
+            ConfiguredLoader = create_loader_context(
+                SmartYAMLLoader,
+                template_base,
+                loader_context["template_path"],
+                set(),  # Empty import stack for extraction
+                loader_context["max_file_size"],
+                loader_context["max_recursion_depth"],
+                None,
+                None,
+            )
+            
+            # Store captured anchors here
+            captured_anchors = {}
+            
+            class AnchorCapturingLoader(ConfiguredLoader):
+                def __init__(self, stream):
+                    super().__init__(stream)
+                
+                def compose_mapping_node(self, anchor):
+                    """Capture mapping anchors during composition."""
+                    node = super().compose_mapping_node(anchor)
+                    if anchor:
+                        # Store the anchor and its node for later use
+                        captured_anchors[anchor] = node
+                    return node
+                
+                def compose_scalar_node(self, anchor):
+                    """Capture scalar anchors during composition."""
+                    node = super().compose_scalar_node(anchor)
+                    if anchor:
+                        captured_anchors[anchor] = node
+                    return node
+                
+                def compose_sequence_node(self, anchor):
+                    """Capture sequence anchors during composition."""
+                    node = super().compose_sequence_node(anchor)
+                    if anchor:
+                        captured_anchors[anchor] = node
+                    return node
+            
+            # Parse template to capture anchors during composition
+            yaml.load(yaml_content, Loader=AnchorCapturingLoader)
+            
+            # Return captured anchors
+            return captured_anchors
+            
+        except Exception:
+            # If extraction fails, return empty - normal template loading will handle errors
+            pass
+            
+        return {}
+
+
+class TemplateConstructor(FileBasedConstructor, YamlFileLoaderMixin):
     """
     Constructor for !template template_name directive.
     Equivalent to !import_yaml($SMARTYAML_TMPL/template_name.yaml)
@@ -74,42 +208,17 @@ class TemplateConstructor(FileBasedConstructor):
         params["resolved_file_path"] = template_file_resolved
 
     def execute(self, loader, params: Dict[str, Any]) -> Any:
-        """Load and parse template YAML file with variable accumulation."""
+        """Load and parse template YAML file with anchor pre-processing and variable accumulation."""
         template_file = params["resolved_file_path"]
-        template_base = params["template_base"]
         loader_context = self.get_loader_context(loader)
-
-        # Read template file content
-        yaml_content = read_file(template_file, loader_context["max_file_size"])
-
-        # Create a new loader with recursion tracking and parent context inheritance
-        # Lazy import to avoid circular dependencies
-        from ..loader import SmartYAMLLoader
-
-        new_import_stack = loader_context["import_stack"].copy()
-        new_import_stack.add(template_file)
-
-        ConfiguredLoader = create_loader_context(
-            SmartYAMLLoader,
-            template_base,
-            loader_context["template_path"],
-            new_import_stack,
-            loader_context["max_file_size"],
-            loader_context["max_recursion_depth"],
-            None,  # No expansion variables needed
-            loader,  # Pass parent loader for variable inheritance
+        
+        # Use the mixin to load the YAML file with anchor preprocessing enabled
+        return self.load_yaml_file(
+            file_path=template_file,
+            loader_context=loader_context, 
+            parent_loader=loader,
+            enable_anchor_preprocessing=True
         )
-
-        # Load template 
-        result = yaml.load(yaml_content, Loader=ConfiguredLoader)
-        
-        # Extract __vars from the loaded template and accumulate them in parent loader
-        if isinstance(result, dict) and '__vars' in result:
-            template_vars = result['__vars']
-            if isinstance(template_vars, dict) and hasattr(loader, 'accumulate_vars'):
-                loader.accumulate_vars(template_vars)
-        
-        return result
 
 
 # Create instance for registration

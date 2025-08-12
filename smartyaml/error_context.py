@@ -49,6 +49,11 @@ class ErrorContextBuilder:
             # Add source name if available
             if hasattr(mark, "name") and mark.name:
                 context["source"] = mark.name
+                
+            # Add YAML snippet context for better debugging
+            yaml_snippet = ErrorContextBuilder._get_yaml_snippet(mark, context_lines=2)
+            if yaml_snippet:
+                context["yaml_snippet"] = yaml_snippet
 
         # Add relevant parameter information (avoid sensitive data)
         safe_params = [
@@ -78,6 +83,73 @@ class ErrorContextBuilder:
         return context
 
     @staticmethod
+    def _get_yaml_snippet(mark: yaml.Mark, context_lines: int = 2) -> Optional[str]:
+        """
+        Extract YAML snippet around the error location for debugging.
+        
+        Args:
+            mark: YAML mark with line/column information
+            context_lines: Number of lines to show before/after error line
+            
+        Returns:
+            Formatted YAML snippet or None if unavailable
+        """
+        if not mark or not hasattr(mark, "get_snippet"):
+            return None
+            
+        try:
+            # Try to get the buffer content from the mark
+            if hasattr(mark, "buffer") and mark.buffer:
+                lines = mark.buffer.splitlines()
+                error_line = mark.line
+                
+                # Calculate snippet range
+                start_line = max(0, error_line - context_lines)
+                end_line = min(len(lines), error_line + context_lines + 1)
+                
+                # Build snippet with line numbers
+                snippet_lines = []
+                for i in range(start_line, end_line):
+                    line_num = i + 1
+                    line_content = lines[i] if i < len(lines) else ""
+                    
+                    # Highlight the error line
+                    marker = ">>> " if i == error_line else "    "
+                    snippet_lines.append(f"{marker}{line_num:3d} | {line_content}")
+                
+                return "\n".join(snippet_lines)
+                
+        except (AttributeError, IndexError, TypeError):
+            pass
+            
+        # Fallback: try to read source file if available
+        try:
+            if hasattr(mark, "name") and mark.name and mark.name != "<unicode string>":
+                source_path = Path(mark.name)
+                if source_path.exists() and source_path.is_file():
+                    with open(source_path, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+                    
+                    error_line = mark.line
+                    start_line = max(0, error_line - context_lines) 
+                    end_line = min(len(lines), error_line + context_lines + 1)
+                    
+                    snippet_lines = []
+                    for i in range(start_line, end_line):
+                        line_num = i + 1
+                        line_content = lines[i].rstrip() if i < len(lines) else ""
+                        
+                        marker = ">>> " if i == error_line else "    "
+                        snippet_lines.append(f"{marker}{line_num:3d} | {line_content}")
+                    
+                    return "\n".join(snippet_lines)
+                    
+        except (OSError, UnicodeDecodeError, IndexError):
+            pass
+            
+        return None
+
+    @staticmethod
     def format_context_string(
         context: Dict[str, Any], exclude_keys: Set[str] = None
     ) -> str:
@@ -101,12 +173,15 @@ class ErrorContextBuilder:
         file_info = []
         import_info = []
         other_info = []
+        yaml_snippet = None
 
         for key, value in context.items():
             if key in exclude_keys or value is None:
                 continue
 
-            if key in ["line", "column", "source"]:
+            if key == "yaml_snippet":
+                yaml_snippet = value  # Handle separately for better formatting
+            elif key in ["line", "column", "source"]:
                 if key == "line" and "line" not in [
                     item.split("=")[0] for item in location_info
                 ]:
@@ -129,7 +204,16 @@ class ErrorContextBuilder:
         for part_list in [location_info, file_info, other_info, import_info]:
             all_parts.extend(part_list)
 
-        return string_optimizations.join_with_separator(all_parts, ", ")
+        context_str = string_optimizations.join_with_separator(all_parts, ", ")
+        
+        # Add YAML snippet on new line if available
+        if yaml_snippet:
+            if context_str:
+                context_str += f"\nYAML context:\n{yaml_snippet}"
+            else:
+                context_str = f"YAML context:\n{yaml_snippet}"
+        
+        return context_str
 
 
 def enhance_error_with_context(error: Exception, context: Dict[str, Any]) -> Exception:

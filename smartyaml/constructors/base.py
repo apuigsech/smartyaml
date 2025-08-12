@@ -223,7 +223,7 @@ class FileBasedConstructor(BaseConstructor):
     def apply_security_checks(self, loader, params: Dict[str, Any]) -> None:
         """Apply file-based security checks."""
         from ..utils.path_utils import resolve_path
-        from ..utils.validation_utils import check_recursion_limit
+        from ..utils.validation_utils import check_recursion_limit, validate_file_before_read
 
         if "filename" not in params:
             return
@@ -233,6 +233,10 @@ class FileBasedConstructor(BaseConstructor):
         max_recursion_depth = getattr(loader, "max_recursion_depth", None)
 
         file_path = resolve_path(params["filename"], base_path)
+        
+        # Pre-flight file validation
+        validate_file_before_read(file_path, self.directive_name)
+        
         check_recursion_limit(import_stack, file_path, max_recursion_depth)
 
         # Store resolved path for use in execute()

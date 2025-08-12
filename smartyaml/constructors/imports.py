@@ -18,6 +18,7 @@ from ..utils.file_utils import read_file
 from ..utils.loader_utils import create_loader_context
 from ..utils.validation_utils import validate_filename
 from .base import FileBasedConstructor
+from .yaml_file_loader import YamlFileLoaderMixin
 
 
 class ImportConstructor(FileBasedConstructor):
@@ -70,7 +71,7 @@ class ImportConstructor(FileBasedConstructor):
         return read_file(file_path, loader_context["max_file_size"])
 
 
-class ImportYamlConstructor(FileBasedConstructor):
+class ImportYamlConstructor(FileBasedConstructor, YamlFileLoaderMixin):
     """
     Constructor for !import_yaml filename directive.
     Loads YAML content from file.
@@ -92,36 +93,14 @@ class ImportYamlConstructor(FileBasedConstructor):
         """Load and return YAML data from file."""
         file_path = params["resolved_file_path"]
         loader_context = self.get_loader_context(loader)
-
-        yaml_content = read_file(file_path, loader_context["max_file_size"])
-
-        # Create a new loader with recursion tracking
-        # Lazy import to avoid circular dependencies
-        from ..loader import SmartYAMLLoader
-
-        new_import_stack = loader_context["import_stack"].copy()
-        new_import_stack.add(file_path)
-
-        ConfiguredLoader = create_loader_context(
-            SmartYAMLLoader,
-            loader_context["base_path"],
-            loader_context["template_path"],
-            new_import_stack,
-            loader_context["max_file_size"],
-            loader_context["max_recursion_depth"],
-            None,  # No expansion variables needed
-            loader,  # Pass parent loader for variable inheritance
+        
+        # Use the mixin to load the YAML file (no anchor preprocessing for imports)
+        return self.load_yaml_file(
+            file_path=file_path,
+            loader_context=loader_context,
+            parent_loader=loader,
+            enable_anchor_preprocessing=False
         )
-
-        result = yaml.load(yaml_content, Loader=ConfiguredLoader)
-        
-        # Extract __vars from the imported file and accumulate them in parent loader
-        if isinstance(result, dict) and '__vars' in result:
-            import_vars = result['__vars']
-            if isinstance(import_vars, dict) and hasattr(loader, 'accumulate_vars'):
-                loader.accumulate_vars(import_vars)
-        
-        return result
 
 
 # Create instances for registration

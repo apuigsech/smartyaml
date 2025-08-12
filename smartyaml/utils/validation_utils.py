@@ -60,13 +60,80 @@ def validate_filename(filename: Any, constructor_name: str) -> str:
         ConstructorError: If filename is invalid
     """
     if not filename or not isinstance(filename, str):
-        raise ConstructorError(f"{constructor_name} requires a non-empty filename")
+        raise ConstructorError(
+            f"{constructor_name} requires a non-empty filename. "
+            f"Example: !import config.yaml or !template base_config"
+        )
 
     # Check for null bytes and other problematic characters
     if "\0" in filename:
-        raise ConstructorError(f"{constructor_name} filename contains null byte")
+        raise ConstructorError(
+            f"{constructor_name} filename contains null byte, which is not allowed. "
+            f"Please check your file path for binary characters."
+        )
 
     return filename
+
+
+def validate_file_before_read(file_path: Path, constructor_name: str) -> None:
+    """
+    Perform pre-flight validation on file before attempting to read it.
+    
+    Args:
+        file_path: Path to file to validate
+        constructor_name: Constructor name for error messages
+        
+    Raises:
+        ConstructorError: If file validation fails
+    """
+    config = get_config()
+    
+    # Check if file exists
+    if not file_path.exists():
+        from ..exceptions import SmartYAMLFileNotFoundError
+        raise SmartYAMLFileNotFoundError(
+            f"File not found: {file_path}. "
+            f"Please check the file path and ensure the file exists."
+        )
+    
+    # Check if it's actually a file (not directory)
+    if not file_path.is_file():
+        raise ConstructorError(
+            f"{constructor_name}: Path is not a file: {file_path}. "
+            f"Please provide a path to a YAML file, not a directory."
+        )
+    
+    # Check file permissions
+    if not os.access(file_path, os.R_OK):
+        raise ConstructorError(
+            f"{constructor_name}: Permission denied reading file: {file_path}. "
+            f"Please check file permissions."
+        )
+    
+    # Check file size before reading
+    try:
+        file_size = file_path.stat().st_size
+        max_size = config.max_file_size
+        
+        if file_size > max_size:
+            size_mb = file_size / (1024 * 1024)
+            limit_mb = max_size / (1024 * 1024)
+            raise ConstructorError(
+                f"{constructor_name}: File too large: {file_path} ({size_mb:.1f}MB). "
+                f"Maximum allowed size is {limit_mb:.1f}MB. "
+                f"Consider splitting the file or increasing max_file_size in config."
+            )
+            
+        # Warn about large files (>1MB)
+        if file_size > 1024 * 1024:  # 1MB
+            size_mb = file_size / (1024 * 1024)
+            # Note: We could add a warning system here in the future
+    
+    except OSError as e:
+        raise ConstructorError(
+            f"{constructor_name}: Error accessing file {file_path}: {e}. "
+            f"Please check file permissions and disk status."
+        ) from e
 
 
 def validate_environment_variable(var_name: Any, constructor_name: str) -> str:
@@ -84,14 +151,19 @@ def validate_environment_variable(var_name: Any, constructor_name: str) -> str:
         ConstructorError: If variable name is invalid
     """
     if not var_name or not isinstance(var_name, str):
-        raise ConstructorError(f"{constructor_name} requires a non-empty variable name")
+        raise ConstructorError(
+            f"{constructor_name} requires a non-empty variable name. "
+            f"Example: !env MY_VARIABLE or !env [MY_VARIABLE, default_value]"
+        )
 
     # Check for valid environment variable name characters (optimized)
     from smartyaml.performance_optimizations import optimized_patterns
 
     if not optimized_patterns.is_valid_env_var_name(var_name):
         raise ConstructorError(
-            f"{constructor_name} invalid environment variable name: {var_name}"
+            f"{constructor_name} invalid environment variable name: '{var_name}'. "
+            f"Environment variable names must contain only letters, numbers, and underscores, "
+            f"and cannot start with a number. Examples: MY_VAR, API_KEY, DB_HOST_1"
         )
 
     return var_name
@@ -230,7 +302,10 @@ def validate_template_path(template_path: Optional[Path]) -> Path:
 
     if template_path:
         if not template_path.exists():
-            raise TemplatePathError(f"Template path does not exist: {template_path}")
+            raise TemplatePathError(
+                f"Template path does not exist: {template_path}. "
+                f"Please create the directory or check the path spelling."
+            )
         return template_path
 
     # Check config first, then environment variable
@@ -244,10 +319,17 @@ def validate_template_path(template_path: Optional[Path]) -> Path:
         if tmpl_path.exists():
             return tmpl_path
         else:
-            raise TemplatePathError(f"SMARTYAML_TMPL path does not exist: {tmpl_path}")
+            raise TemplatePathError(
+                f"SMARTYAML_TMPL path does not exist: {tmpl_path}. "
+                f"Please create the directory or update the environment variable."
+            )
 
     raise TemplatePathError(
-        "Template path not configured. Set template_base_path in config or SMARTYAML_TMPL environment variable"
+        "Template path not configured. To fix this, either:\n"
+        "1. Set SMARTYAML_TMPL environment variable to your templates directory\n"
+        "2. Pass template_path parameter to load() function\n"
+        "3. Configure template_base_path in SmartYAML config\n"
+        "Example: export SMARTYAML_TMPL=/path/to/templates"
     )
 
 

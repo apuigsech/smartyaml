@@ -36,17 +36,13 @@ class FileCache:
         if not config.enable_file_caching:
             return None
 
-        # Cleanup cache periodically
-        current_time = time.time()
-        if current_time - self._last_cleanup > config.cache_cleanup_interval:
-            self._cleanup_expired()
-            self._last_cleanup = current_time
-
         cache_key = str(file_path.resolve())
         entry = self._cache.get(cache_key)
 
         if entry is None:
             return None
+
+        current_time = time.time()
 
         # Check if entry is expired
         if current_time - entry.timestamp > config.cache_ttl_seconds:
@@ -86,12 +82,25 @@ class FileCache:
 
             self._cache[cache_key] = entry
 
-            # Check cache size limits
+            # Check cache size limits and maybe cleanup
             self._enforce_size_limits()
+            self._maybe_cleanup()
 
         except OSError:
             # Failed to get file stats, don't cache
             pass
+
+    def _maybe_cleanup(self) -> None:
+        """Perform lazy cleanup if enough time has passed since last cleanup."""
+        config = get_config()
+        current_time = time.time()
+        
+        # Only cleanup every 5 minutes to avoid overhead
+        cleanup_interval = 300  # 5 minutes
+        
+        if current_time - self._last_cleanup > cleanup_interval:
+            self._cleanup_expired()
+            self._last_cleanup = current_time
 
     def _cleanup_expired(self) -> None:
         """Remove expired cache entries."""

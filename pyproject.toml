@@ -65,6 +65,7 @@ docs = [
 packages = [
     "smartyaml", 
     "smartyaml.constructors", 
+    "smartyaml.loading",
     "smartyaml.parsing", 
     "smartyaml.processing", 
     "smartyaml.utils"

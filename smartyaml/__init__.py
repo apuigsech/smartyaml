@@ -96,10 +96,31 @@ def process_deferred_expansions(data: Any, variables: Dict[str, Any]) -> Any:
                     missing_vars = engine.extract_variable_names(content)
                     from .exceptions import ConstructorError
 
+                    # Build helpful debugging message
+                    debug_info = f"Variables found in content: {missing_vars}"
+                    
+                    # Add information about available variables if any exist
+                    if variables:
+                        available_vars = list(variables.keys())
+                        debug_info += f"\nAvailable variables: {available_vars}"
+                        
+                        # Show which specific variables are missing
+                        truly_missing = [var for var in missing_vars if var not in variables]
+                        if truly_missing:
+                            debug_info += f"\nMissing variables: {truly_missing}"
+                    else:
+                        debug_info += "\nNo variables provided to SmartYAML"
+
                     raise ConstructorError(
                         directive_name="!expand",
-                        message=f"!expand directive found variables {missing_vars} but no variables provided. "
-                        f"Pass variables to load() function or define __vars metadata.",
+                        message=(
+                            f"Variable expansion failed: {debug_info}\n"
+                            f"To fix this, either:\n"
+                            f"1. Pass variables to load() function: load(file, variables={{'key': 'value'}})\n"
+                            f"2. Define __vars in your YAML: __vars: {{key: value}}\n"
+                            f"3. Ensure all referenced variables are defined"
+                        ),
+                        location=None
                     )
                 return content
         else:
@@ -138,67 +159,18 @@ def load(
     Returns:
         Parsed YAML data with SmartYAML directives processed and metadata fields removed
     """
-    if isinstance(stream, (str, Path)) and Path(stream).exists():
-        # Load from file
-        file_path = Path(stream).resolve()
-        if base_path is None:
-            base_path = file_path.parent
-
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
-    else:
-        # Load from string
-        content = str(stream)
-        if base_path is None:
-            base_path = Path.cwd()
-
-    # Create a custom loader class with paths, limits, and variables set
-    class ConfiguredSmartYAMLLoader(SmartYAMLLoader):
-        def __init__(self, stream):
-            super().__init__(stream)
-            self.base_path = Path(base_path).resolve()
-            if template_path:
-                self.template_path = Path(template_path).resolve()
-            self.import_stack = set()
-            self.max_file_size = max_file_size
-            self.max_recursion_depth = max_recursion_depth
-            # Initialize expansion_variables with function variables
-            self.expansion_variables = variables or {}
-            # Initialize accumulated_vars with function variables as base
-            self.accumulated_vars = (variables or {}).copy()
-
-    # Load with the configured loader that will accumulate variables
-    # Store reference to the loader instance so we can access accumulated_vars
-    _loader_instance = None
+    from .loading import LoadPipeline
     
-    class LoaderWrapper(ConfiguredSmartYAMLLoader):
-        def __init__(self, stream):
-            super().__init__(stream)
-            nonlocal _loader_instance
-            _loader_instance = self
-    
-    result = yaml.load(content, Loader=LoaderWrapper)
-    accumulated_variables = _loader_instance.accumulated_vars if _loader_instance else {}
-    
-    # Also accumulate variables from the root result itself
-    if isinstance(result, dict) and '__vars' in result:
-        root_vars = result['__vars']
-        if isinstance(root_vars, dict):
-            accumulated_variables.update(root_vars)
-    
-
-    # Process deferred expansions with accumulated variables
-    if accumulated_variables:
-        result = process_deferred_expansions(result, accumulated_variables)
-    else:
-        # Process deferred expansions with no variables (will raise errors if needed)  
-        result = process_deferred_expansions(result, {})
-
-    # Remove metadata fields if requested (this removes __vars)
-    if remove_metadata:
-        result = remove_metadata_fields(result)
-
-    return result
+    pipeline = LoadPipeline()
+    return pipeline.load(
+        stream=stream,
+        base_path=base_path,
+        template_path=template_path,
+        max_file_size=max_file_size,
+        max_recursion_depth=max_recursion_depth,
+        remove_metadata=remove_metadata,
+        variables=variables,
+    )
 
 
 def loads(
@@ -225,67 +197,18 @@ def loads(
     Returns:
         Parsed YAML data with SmartYAML directives processed and metadata fields removed
     """
-    if base_path is None:
-        base_path = Path.cwd()
-
-    # Create a custom loader class with paths, limits, and variables set
-    class ConfiguredSmartYAMLLoader(SmartYAMLLoader):
-        def __init__(self, stream):
-            super().__init__(stream)
-            self.base_path = Path(base_path).resolve()
-            if template_path:
-                self.template_path = Path(template_path).resolve()
-            self.import_stack = set()
-            self.max_file_size = max_file_size
-            self.max_recursion_depth = max_recursion_depth
-            # Initialize expansion_variables with function variables
-            self.expansion_variables = variables or {}
-            # Initialize accumulated_vars with function variables as base
-            self.accumulated_vars = (variables or {}).copy()
-
-    # Load with the configured loader that will accumulate variables
-    # Store reference to the loader instance so we can access accumulated_vars
-    _loader_instance = None
+    from .loading import LoadPipeline
     
-    class LoaderWrapper(ConfiguredSmartYAMLLoader):
-        def __init__(self, stream):
-            super().__init__(stream)
-            nonlocal _loader_instance
-            _loader_instance = self
-    
-    result = yaml.load(content, Loader=LoaderWrapper)
-    accumulated_variables = _loader_instance.accumulated_vars if _loader_instance else {}
-    
-    # Also accumulate variables from the root result itself
-    if isinstance(result, dict) and '__vars' in result:
-        root_vars = result['__vars']
-        if isinstance(root_vars, dict):
-            accumulated_variables.update(root_vars)
-    
-    # Process deferred expansions with accumulated variables
-    if accumulated_variables:
-        # First, expand any deferred expansions in the accumulated variables themselves
-        # This may need multiple passes as variables reference each other
-        max_iterations = 10  # Prevent infinite loops
-        for i in range(max_iterations):
-            expanded_vars = process_deferred_expansions(accumulated_variables, accumulated_variables)
-            if expanded_vars == accumulated_variables:
-                # No more changes, we're done
-                break
-            accumulated_variables = expanded_vars
-        
-        # Now process deferred expansions in the main result using the fully expanded variables
-        result = process_deferred_expansions(result, accumulated_variables)
-    else:
-        # Process deferred expansions with no variables (will raise errors if needed)
-        result = process_deferred_expansions(result, {})
-
-    # Remove metadata fields if requested (this removes __vars)
-    if remove_metadata:
-        result = remove_metadata_fields(result)
-
-    return result
-
+    pipeline = LoadPipeline()
+    return pipeline.load(
+        stream=content,
+        base_path=base_path,
+        template_path=template_path,
+        max_file_size=max_file_size,
+        max_recursion_depth=max_recursion_depth,
+        remove_metadata=remove_metadata,
+        variables=variables,
+    )
 
 
 def dump(

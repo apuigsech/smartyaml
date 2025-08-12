@@ -5,37 +5,39 @@ Encoding constructors for SmartYAML
 import base64
 from typing import Any, Dict
 
-from ..exceptions import Base64Error
+from ..exceptions import ConstructorError, Base64Error
+from ..processing import ParameterExtractor, ParameterPattern, ParameterSpec, ParameterValidator
 from .base import BaseConstructor
 
 
 class Base64Constructor(BaseConstructor):
     """
-    Constructor for !base64(data) directive.
+    Constructor for !base64(data) directive using standardized parameter processing.
     Encodes string data to base64.
     """
 
     def __init__(self):
-        super().__init__("!base64")
+        # Define parameter specifications
+        specs = [
+            ParameterSpec(name="data", param_type=str, required=True),
+        ]
+        
+        # Create standardized extractor and validator  
+        extractor = ParameterExtractor(ParameterPattern.SINGLE_SCALAR, specs)
+        validator = ParameterValidator.create_standard_validator(
+            required_params=["data"],
+            type_specs={"data": str}
+        )
+        
+        super().__init__("!base64", extractor, validator)
 
     def extract_parameters(self, loader, node) -> Dict[str, Any]:
-        """Extract data to encode from YAML node."""
-        if hasattr(node, "value") and isinstance(node.value, list):
-            # For sequence node (multiple parameters), join them with comma
-            # This handles cases like !base64(Hello, world!) where the comma is part of the data
-            params = [loader.construct_scalar(param_node) for param_node in node.value]
-            data = ", ".join(params)
-        else:
-            # For scalar node, use as-is
-            data = loader.construct_scalar(node)
-        return {"data": data}
+        """Extract parameters - handled by standardized extractor."""
+        return {}  # Empty - handled by ParameterExtractor
 
     def validate_parameters(self, params: Dict[str, Any]) -> None:
-        """Validate data parameter."""
-        if params["data"] is None:
-            raise Base64Error(f"{self.directive_name} requires data to encode")
-        if not isinstance(params["data"], str):
-            raise Base64Error(f"{self.directive_name} data must be a string")
+        """Validate parameters - handled by standardized validator."""
+        pass  # Empty - handled by ParameterValidator
 
     def execute(self, loader, params: Dict[str, Any]) -> str:
         """Encode data to base64."""
@@ -46,35 +48,41 @@ class Base64Constructor(BaseConstructor):
             encoded_bytes = base64.b64encode(data.encode("utf-8"))
             return encoded_bytes.decode("ascii")
         except Exception as e:
-            raise Base64Error(f"Failed to base64 encode data: {e}")
+            raise ConstructorError(
+                directive_name=self.directive_name,
+                message=f"Failed to base64 encode data: {e}",
+                location=None,
+            ) from e
 
 
 class Base64DecodeConstructor(BaseConstructor):
     """
-    Constructor for !base64_decode(data) directive.
+    Constructor for !base64_decode(data) directive using standardized parameter processing.
     Decodes base64 data to string.
     """
 
     def __init__(self):
-        super().__init__("!base64_decode")
+        # Define parameter specifications
+        specs = [
+            ParameterSpec(name="b64_data", param_type=str, required=True),
+        ]
+        
+        # Create standardized extractor and validator
+        extractor = ParameterExtractor(ParameterPattern.SINGLE_SCALAR, specs)
+        validator = ParameterValidator.create_standard_validator(
+            required_params=["b64_data"],
+            type_specs={"b64_data": str}
+        )
+        
+        super().__init__("!base64_decode", extractor, validator)
 
     def extract_parameters(self, loader, node) -> Dict[str, Any]:
-        """Extract base64 data to decode from YAML node."""
-        if hasattr(node, "value") and isinstance(node.value, list):
-            # For sequence node (multiple parameters), join them (though unlikely for base64 data)
-            params = [loader.construct_scalar(param_node) for param_node in node.value]
-            b64_data = "".join(params)  # No comma separator for base64 data
-        else:
-            # For scalar node, use as-is
-            b64_data = loader.construct_scalar(node)
-        return {"b64_data": b64_data}
+        """Extract parameters - handled by standardized extractor."""
+        return {}  # Empty - handled by ParameterExtractor
 
     def validate_parameters(self, params: Dict[str, Any]) -> None:
-        """Validate base64 data parameter."""
-        if params["b64_data"] is None:
-            raise Base64Error(f"{self.directive_name} requires base64 data to decode")
-        if not isinstance(params["b64_data"], str):
-            raise Base64Error(f"{self.directive_name} data must be a string")
+        """Validate parameters - handled by standardized validator."""
+        pass  # Empty - handled by ParameterValidator
 
     def execute(self, loader, params: Dict[str, Any]) -> str:
         """Decode base64 data to string."""
@@ -85,7 +93,11 @@ class Base64DecodeConstructor(BaseConstructor):
             decoded_bytes = base64.b64decode(b64_data)
             return decoded_bytes.decode("utf-8")
         except Exception as e:
-            raise Base64Error(f"Failed to base64 decode data: {e}")
+            raise ConstructorError(
+                directive_name=self.directive_name,
+                message=f"Failed to base64 decode data: {e}",
+                location=None,
+            ) from e
 
 
 # Create instances for registration

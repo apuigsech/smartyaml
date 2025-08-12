@@ -35,8 +35,8 @@ class SmartYAMLConfig:
     )
 
     # Performance settings
-    enable_file_caching: bool = False
-    cache_ttl_seconds: int = 300  # 5 minutes
+    enable_file_caching: bool = True
+    cache_ttl_seconds: int = 60  # 1 minute for better development workflow
     max_cache_size_mb: int = 100
     cache_cleanup_interval: int = 60  # 1 minute
 
