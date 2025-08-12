@@ -130,3 +130,59 @@ config: !import_yaml middle.yaml
         result = smartyaml.load(yaml_file)
         assert result['config']['inner']['value'] == 'inner_value'
         assert result['config']['middle_value'] == 'middle'
+
+
+class TestTemplateNullHandling:
+    """Test null value handling in template merge operations"""
+    
+    def test_template_merge_preserves_null_values(self, tmp_path):
+        """Test that null values are preserved when using << with !template"""
+        # Create template file with null values
+        template_dir = tmp_path / "templates" / "test"
+        template_dir.mkdir(parents=True)
+        template_file = template_dir / "sample.yaml"
+        template_file.write_text("""
+name: "test_template"
+description: null
+value: 42
+optional_field: ~
+""")
+        
+        # Create main YAML file using template with merge
+        yaml_file = tmp_path / "main.yaml"
+        yaml_file.write_text("""
+# Test merge operator with template (the bug scenario)
+merged_config:
+  <<: !template(test/sample)
+  additional_field: "added"
+
+# Test direct template usage (control)
+direct_config:
+  template: !template(test/sample)
+""")
+        
+        # Load with template path
+        result = smartyaml.load(yaml_file, template_path=tmp_path / "templates")
+        
+        # Verify null values are preserved in merge scenario
+        merged_desc = result['merged_config']['description']
+        merged_optional = result['merged_config']['optional_field']
+        
+        # Verify null values are preserved in direct scenario
+        direct_desc = result['direct_config']['template']['description'] 
+        direct_optional = result['direct_config']['template']['optional_field']
+        
+        # Both should be None, not the string "None"
+        assert merged_desc is None, f"Expected None, got {repr(merged_desc)}"
+        assert merged_optional is None, f"Expected None, got {repr(merged_optional)}"
+        assert direct_desc is None, f"Expected None, got {repr(direct_desc)}"
+        assert direct_optional is None, f"Expected None, got {repr(direct_optional)}"
+        
+        # They should be equal
+        assert merged_desc == direct_desc
+        assert merged_optional == direct_optional
+        
+        # Other values should be preserved correctly
+        assert result['merged_config']['name'] == "test_template"
+        assert result['merged_config']['value'] == 42
+        assert result['merged_config']['additional_field'] == "added"

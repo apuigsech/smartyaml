@@ -148,13 +148,19 @@ class SmartYAMLLoader(yaml.SafeLoader):
         if isinstance(value, dict):
             pairs = []
             for k, v in value.items():
-                key_node = yaml.ScalarNode('tag:yaml.org,2002:str', str(k), mark)
+                # Handle None keys properly (though this is unusual)
+                if k is None:
+                    key_node = yaml.ScalarNode('tag:yaml.org,2002:null', '', mark)
+                else:
+                    key_node = yaml.ScalarNode('tag:yaml.org,2002:str', str(k), mark)
                 val_node = self.create_value_node(v, mark)
                 pairs.append((key_node, val_node))
             return yaml.MappingNode('tag:yaml.org,2002:map', pairs, mark)
         elif isinstance(value, list):
             items = [self.create_value_node(item, mark) for item in value]
             return yaml.SequenceNode('tag:yaml.org,2002:seq', items, mark)
+        elif value is None:
+            return yaml.ScalarNode('tag:yaml.org,2002:null', '', mark)
         elif isinstance(value, bool):
             return yaml.ScalarNode('tag:yaml.org,2002:bool', str(value).lower(), mark)
         elif isinstance(value, int):
