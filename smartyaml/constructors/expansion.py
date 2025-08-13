@@ -121,15 +121,19 @@ class ExpandConstructor(BaseConstructor):
         content = params["content"]
 
         # Check if the loader has expansion variables available
-        if hasattr(loader, 'expansion_variables') and loader.expansion_variables:
+        if hasattr(loader, "expansion_variables") and loader.expansion_variables:
             try:
                 # Try immediate expansion if variables are available
                 engine = VariableSubstitutionEngine(loader.expansion_variables)
-                
+
                 # Only expand if all required variables are available
                 required_vars = engine.extract_variable_names(content)
-                missing_vars = [var for var in required_vars if var not in loader.expansion_variables]
-                
+                missing_vars = [
+                    var
+                    for var in required_vars
+                    if var not in loader.expansion_variables
+                ]
+
                 if not missing_vars:
                     # All variables available, expand immediately
                     return engine.substitute_string(content)

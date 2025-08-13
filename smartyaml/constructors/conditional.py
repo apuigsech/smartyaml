@@ -83,8 +83,11 @@ class IncludeYamlIfConstructor(ConditionalConstructor):
         yaml_content = read_file(file_path, loader_context["max_file_size"])
 
         # Use shared YAML parsing utility
-        from ..utils.yaml_parsing import load_yaml_with_context, create_import_stack_copy
         from ..loader import SmartYAMLLoader
+        from ..utils.yaml_parsing import (
+            create_import_stack_copy,
+            load_yaml_with_context,
+        )
 
         new_import_stack = create_import_stack_copy(loader_context, file_path)
 
@@ -98,7 +101,7 @@ class IncludeYamlIfConstructor(ConditionalConstructor):
             max_recursion_depth=loader_context["max_recursion_depth"],
             expansion_variables=None,  # No expansion variables needed
             parent_loader=loader,  # Pass parent loader for variable inheritance
-            accumulate_vars=True
+            accumulate_vars=True,
         )
 
 

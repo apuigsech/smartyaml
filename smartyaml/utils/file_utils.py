@@ -94,10 +94,10 @@ class FileCache:
         """Perform lazy cleanup if enough time has passed since last cleanup."""
         config = get_config()
         current_time = time.time()
-        
+
         # Only cleanup every 5 minutes to avoid overhead
         cleanup_interval = 300  # 5 minutes
-        
+
         if current_time - self._last_cleanup > cleanup_interval:
             self._cleanup_expired()
             self._last_cleanup = current_time

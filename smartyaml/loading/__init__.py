@@ -1,7 +1,7 @@
 """
 Loading pipeline components for SmartYAML.
 
-This package contains the refactored loading architecture that replaces 
+This package contains the refactored loading architecture that replaces
 the monolithic load() and loads() functions with a composable pipeline.
 """
 
@@ -14,7 +14,7 @@ from .variable_merger import VariableMerger
 __all__ = [
     "ContentReader",
     "InlineTemplateProcessor",
-    "LoadPipeline", 
+    "LoadPipeline",
     "TemplatePreprocessor",
     "VariableMerger",
 ]

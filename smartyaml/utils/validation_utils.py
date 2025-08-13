@@ -78,43 +78,44 @@ def validate_filename(filename: Any, constructor_name: str) -> str:
 def validate_file_before_read(file_path: Path, constructor_name: str) -> None:
     """
     Perform pre-flight validation on file before attempting to read it.
-    
+
     Args:
         file_path: Path to file to validate
         constructor_name: Constructor name for error messages
-        
+
     Raises:
         ConstructorError: If file validation fails
     """
     config = get_config()
-    
+
     # Check if file exists
     if not file_path.exists():
         from ..exceptions import SmartYAMLFileNotFoundError
+
         raise SmartYAMLFileNotFoundError(
             f"File not found: {file_path}. "
             f"Please check the file path and ensure the file exists."
         )
-    
+
     # Check if it's actually a file (not directory)
     if not file_path.is_file():
         raise ConstructorError(
             f"{constructor_name}: Path is not a file: {file_path}. "
             f"Please provide a path to a YAML file, not a directory."
         )
-    
+
     # Check file permissions
     if not os.access(file_path, os.R_OK):
         raise ConstructorError(
             f"{constructor_name}: Permission denied reading file: {file_path}. "
             f"Please check file permissions."
         )
-    
+
     # Check file size before reading
     try:
         file_size = file_path.stat().st_size
         max_size = config.max_file_size
-        
+
         if file_size > max_size:
             size_mb = file_size / (1024 * 1024)
             limit_mb = max_size / (1024 * 1024)
@@ -123,12 +124,12 @@ def validate_file_before_read(file_path: Path, constructor_name: str) -> None:
                 f"Maximum allowed size is {limit_mb:.1f}MB. "
                 f"Consider splitting the file or increasing max_file_size in config."
             )
-            
+
         # Warn about large files (>1MB)
         if file_size > 1024 * 1024:  # 1MB
             size_mb = file_size / (1024 * 1024)
             # Note: We could add a warning system here in the future
-    
+
     except OSError as e:
         raise ConstructorError(
             f"{constructor_name}: Error accessing file {file_path}: {e}. "

@@ -93,13 +93,13 @@ class ImportYamlConstructor(FileBasedConstructor, YamlFileLoaderMixin):
         """Load and return YAML data from file."""
         file_path = params["resolved_file_path"]
         loader_context = self.get_loader_context(loader)
-        
+
         # Use the mixin to load the YAML file (no anchor preprocessing for imports)
         return self.load_yaml_file(
             file_path=file_path,
             loader_context=loader_context,
             parent_loader=loader,
-            enable_anchor_preprocessing=False
+            enable_anchor_preprocessing=False,
         )
 
 

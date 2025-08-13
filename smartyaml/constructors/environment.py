@@ -7,7 +7,12 @@ from typing import Any, Dict
 import yaml
 
 from ..exceptions import ConstructorError, EnvironmentVariableError
-from ..processing import ParameterExtractor, ParameterPattern, ParameterSpec, ParameterValidator
+from ..processing import (
+    ParameterExtractor,
+    ParameterPattern,
+    ParameterSpec,
+    ParameterValidator,
+)
 from ..utils.validation_utils import (
     get_env_var,
     validate_constructor_args,
@@ -31,15 +36,17 @@ class EnvironmentConstructor(EnvironmentBasedConstructor):
             ParameterSpec(name="var_name", param_type=str, required=True),
             ParameterSpec(name="default", param_type=str, required=False, default=None),
         ]
-        
+
         # Create standardized extractor and validator
         extractor = ParameterExtractor(ParameterPattern.SCALAR_OR_SEQUENCE, specs)
         validator = ParameterValidator.create_standard_validator(
             required_params=["var_name"],
             type_specs={"var_name": str},
-            custom_validators={"var_name": lambda v: validate_environment_variable(v, "!env")}
+            custom_validators={
+                "var_name": lambda v: validate_environment_variable(v, "!env")
+            },
         )
-        
+
         super().__init__("!env", extractor, validator)
 
     def extract_parameters(self, loader, node) -> Dict[str, Any]:

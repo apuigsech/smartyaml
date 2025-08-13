@@ -14,7 +14,7 @@ def create_loader_context(
     max_file_size: Optional[int] = None,
     max_recursion_depth: Optional[int] = None,
     expansion_variables: Optional[Dict[str, Any]] = None,
-    parent_loader = None,
+    parent_loader=None,
 ):
     """
     Create a configured loader with context information.
@@ -43,9 +43,9 @@ def create_loader_context(
             self.max_file_size = max_file_size
             self.max_recursion_depth = max_recursion_depth
             self.expansion_variables = expansion_variables or {}
-            
+
             # Initialize accumulated vars with parent's accumulated variables
-            if parent_loader and hasattr(parent_loader, 'accumulated_vars'):
+            if parent_loader and hasattr(parent_loader, "accumulated_vars"):
                 self.accumulated_vars = parent_loader.accumulated_vars.copy()
             else:
                 self.accumulated_vars = (expansion_variables or {}).copy()

@@ -8,7 +8,7 @@ from typing import Any, Dict, Union
 def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
     """
     Deep merge two dictionaries with override taking precedence.
-    
+
     This is the shared implementation used throughout SmartYAML for consistent
     deep merging behavior. It uses copy.deepcopy to avoid modifying original data.
 
@@ -20,28 +20,28 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
         Merged dictionary
     """
     import copy
-    
+
     # Start with a deep copy of base to avoid modifying original
     result = copy.deepcopy(base)
-    
+
     # Recursively merge override into result
     _merge_dict_recursive(result, override)
-    
+
     return result
 
 
 def _merge_dict_recursive(target: Dict[str, Any], source: Dict[str, Any]) -> None:
     """
     Recursively merge source dictionary into target dictionary.
-    
+
     This is an internal helper function that modifies the target dictionary in place.
-    
+
     Args:
         target: Target dictionary to merge into (modified in place)
         source: Source dictionary to merge from
     """
     import copy
-    
+
     for key, value in source.items():
         if key in target:
             # Key exists in both - need to merge

@@ -53,7 +53,7 @@ def remove_metadata_fields(data: Any) -> Any:
         The data structure with all metadata fields removed
     """
     METADATA_PREFIX = "__"
-    
+
     if isinstance(data, dict):
         # Remove keys starting with "__" and recursively process remaining values
         return {
@@ -81,7 +81,7 @@ def process_deferred_expansions(data: Any, variables: Dict[str, Any]) -> Any:
         Data structure with deferred expansions processed
     """
     from .constants import DEFERRED_EXPANSION_KEY
-    
+
     if isinstance(data, dict):
         if DEFERRED_EXPANSION_KEY in data and len(data) == 1:
             # This is a deferred expansion marker
@@ -102,14 +102,16 @@ def process_deferred_expansions(data: Any, variables: Dict[str, Any]) -> Any:
 
                     # Build helpful debugging message
                     debug_info = f"Variables found in content: {missing_vars}"
-                    
+
                     # Add information about available variables if any exist
                     if variables:
                         available_vars = list(variables.keys())
                         debug_info += f"\nAvailable variables: {available_vars}"
-                        
+
                         # Show which specific variables are missing
-                        truly_missing = [var for var in missing_vars if var not in variables]
+                        truly_missing = [
+                            var for var in missing_vars if var not in variables
+                        ]
                         if truly_missing:
                             debug_info += f"\nMissing variables: {truly_missing}"
                     else:
@@ -124,7 +126,7 @@ def process_deferred_expansions(data: Any, variables: Dict[str, Any]) -> Any:
                             f"2. Define __vars in your YAML: __vars: {{key: value}}\n"
                             f"3. Ensure all referenced variables are defined"
                         ),
-                        location=None
+                        location=None,
                     )
                 return content
         else:
@@ -164,7 +166,7 @@ def load(
         Parsed YAML data with SmartYAML directives processed and metadata fields removed
     """
     from .loading import LoadPipeline
-    
+
     pipeline = LoadPipeline()
     return pipeline.load(
         stream=stream,
@@ -202,7 +204,7 @@ def loads(
         Parsed YAML data with SmartYAML directives processed and metadata fields removed
     """
     from .loading import LoadPipeline
-    
+
     pipeline = LoadPipeline()
     return pipeline.load(
         stream=content,

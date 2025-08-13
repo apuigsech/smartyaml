@@ -181,6 +181,7 @@ def register_default_constructors() -> None:
         base64_decode_constructor,
         env_constructor,
         expand_constructor,
+        extend_constructor,
         import_constructor,
         import_yaml_constructor,
         include_if_constructor,
@@ -198,6 +199,7 @@ def register_default_constructors() -> None:
         "!base64": base64_constructor,
         "!base64_decode": base64_decode_constructor,
         "!expand": expand_constructor,
+        "!extend": extend_constructor,
     }
 
     _registry.register_multiple(constructors)

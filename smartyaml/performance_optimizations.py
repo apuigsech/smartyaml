@@ -15,14 +15,22 @@ class OptimizedPatterns:
     ENV_VAR_PATTERN: Pattern = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
     FILENAME_PATTERN: Pattern = re.compile(r'^[^<>:"|?*\x00-\x1f]+$')
     TEMPLATE_NAME_PATTERN: Pattern = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
-    
+
     # YAML parsing patterns
-    TEMPLATE_DIRECTIVE_PATTERN: Pattern = re.compile(r'^\s*__template\s*:', re.MULTILINE)
-    VARS_SECTION_PATTERN: Pattern = re.compile(r'^__vars:\s*\n((?:[ ]{2}.*\n)*)', re.MULTILINE)
-    
+    TEMPLATE_DIRECTIVE_PATTERN: Pattern = re.compile(
+        r"^\s*__template\s*:", re.MULTILINE
+    )
+    VARS_SECTION_PATTERN: Pattern = re.compile(
+        r"^__vars:\s*\n((?:[ ]{2}.*\n)*)", re.MULTILINE
+    )
+
     # Template processing patterns
-    TEMPLATE_REFERENCE_PATTERN: Pattern = re.compile(r'!template\s*\([^)]+\)|<<:\s*!template\s*\([^)]+\)')
-    TEMPLATE_NAME_EXTRACT_PATTERN: Pattern = re.compile(r'!template\s*\(\s*([^)]+)\s*\)')
+    TEMPLATE_REFERENCE_PATTERN: Pattern = re.compile(
+        r"!template\s*\([^)]+\)|<<:\s*!template\s*\([^)]+\)"
+    )
+    TEMPLATE_NAME_EXTRACT_PATTERN: Pattern = re.compile(
+        r"!template\s*\(\s*([^)]+)\s*\)"
+    )
 
     # Common string operations
     SAFE_PATH_CHARS: Set[str] = set(
@@ -49,7 +57,7 @@ class OptimizedPatterns:
         """Optimized extraction of __vars section from YAML content."""
         match = OptimizedPatterns.VARS_SECTION_PATTERN.search(yaml_content)
         if match:
-            return '__vars:\n' + match.group(1)
+            return "__vars:\n" + match.group(1)
         return None
 
     @staticmethod

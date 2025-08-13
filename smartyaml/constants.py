@@ -8,6 +8,7 @@ This module centralizes all magic strings and constants to improve maintainabili
 TEMPLATE_KEY = "__template"
 VARS_KEY = "__vars"
 DEFERRED_EXPANSION_KEY = "__smartyaml_expand_deferred"
+EXTEND_MARKER_KEY = "__smartyaml_extend_marker"
 
 # YAML tags and directives
 TAG_PREFIX = "!"
@@ -15,12 +16,13 @@ MERGE_KEY = "<<"
 
 # Common directive names
 DIRECTIVE_IMPORT = "!import"
-DIRECTIVE_IMPORT_YAML = "!import_yaml" 
+DIRECTIVE_IMPORT_YAML = "!import_yaml"
 DIRECTIVE_EXPAND = "!expand"
 DIRECTIVE_ENV = "!env"
 DIRECTIVE_TEMPLATE = "!template"
 DIRECTIVE_IF_ENV = "!if_env"
 DIRECTIVE_BASE64 = "!base64"
+DIRECTIVE_EXTEND = "!extend"
 
 # Default limits and settings
 DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB

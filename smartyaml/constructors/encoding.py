@@ -5,8 +5,13 @@ Encoding constructors for SmartYAML
 import base64
 from typing import Any, Dict
 
-from ..exceptions import ConstructorError, Base64Error
-from ..processing import ParameterExtractor, ParameterPattern, ParameterSpec, ParameterValidator
+from ..exceptions import Base64Error, ConstructorError
+from ..processing import (
+    ParameterExtractor,
+    ParameterPattern,
+    ParameterSpec,
+    ParameterValidator,
+)
 from .base import BaseConstructor
 
 
@@ -21,14 +26,13 @@ class Base64Constructor(BaseConstructor):
         specs = [
             ParameterSpec(name="data", param_type=str, required=True),
         ]
-        
-        # Create standardized extractor and validator  
+
+        # Create standardized extractor and validator
         extractor = ParameterExtractor(ParameterPattern.SINGLE_SCALAR, specs)
         validator = ParameterValidator.create_standard_validator(
-            required_params=["data"],
-            type_specs={"data": str}
+            required_params=["data"], type_specs={"data": str}
         )
-        
+
         super().__init__("!base64", extractor, validator)
 
     def extract_parameters(self, loader, node) -> Dict[str, Any]:
@@ -66,14 +70,13 @@ class Base64DecodeConstructor(BaseConstructor):
         specs = [
             ParameterSpec(name="b64_data", param_type=str, required=True),
         ]
-        
+
         # Create standardized extractor and validator
         extractor = ParameterExtractor(ParameterPattern.SINGLE_SCALAR, specs)
         validator = ParameterValidator.create_standard_validator(
-            required_params=["b64_data"],
-            type_specs={"b64_data": str}
+            required_params=["b64_data"], type_specs={"b64_data": str}
         )
-        
+
         super().__init__("!base64_decode", extractor, validator)
 
     def extract_parameters(self, loader, node) -> Dict[str, Any]:
