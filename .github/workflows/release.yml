@@ -101,7 +101,7 @@ jobs:
     needs: [build, test-built-package]
     environment:
       name: pypi
-      url: https://pypi.org/p/smartyaml
+      url: https://pypi.org/p/pysmartyaml
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     
