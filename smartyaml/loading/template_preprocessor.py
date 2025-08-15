@@ -2,9 +2,8 @@
 Template preprocessing service for SmartYAML loading pipeline.
 """
 
-import re
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple
 
 import yaml
 
@@ -120,7 +119,7 @@ class TemplatePreprocessor:
             # Try parsing with safe_load first (for simple cases)
             try:
                 raw_data = yaml.safe_load(content)
-            except Exception as e:
+            except Exception:
                 # For now, if we can't parse with safe_load, skip preprocessing
                 # The content will be processed in the main pipeline
                 return content
@@ -158,7 +157,7 @@ class TemplatePreprocessor:
             # Convert back to YAML string
             return yaml.dump(merged_data, default_flow_style=False, allow_unicode=True)
 
-        except Exception as e:
+        except Exception:
             # If template processing fails, return original content
             # The error will be caught during main YAML parsing
             return content

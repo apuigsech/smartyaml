@@ -4,7 +4,7 @@ Parameter processing classes for SmartYAML tag parsing
 
 import re
 from abc import ABC, abstractmethod
-from typing import Any, List, Union
+from typing import List
 
 
 class BaseParameterProcessor(ABC):
@@ -13,7 +13,6 @@ class BaseParameterProcessor(ABC):
     @abstractmethod
     def process(self, raw_params: str) -> List[str]:
         """Process raw parameter string into a list of parameters."""
-        pass
 
 
 class ScalarParameterProcessor(BaseParameterProcessor):

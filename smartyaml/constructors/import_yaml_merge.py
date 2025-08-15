@@ -2,7 +2,6 @@
 Special import_yaml constructor that supports merging with sibling fields
 """
 
-from pathlib import Path
 from typing import Any, Dict
 
 import yaml
@@ -10,7 +9,6 @@ import yaml
 from ..exceptions import SmartYAMLError
 from ..merge import merge_yaml_data
 from ..utils.file_utils import read_file
-from ..utils.loader_utils import create_loader_context
 from ..utils.path_utils import resolve_path
 from ..utils.validation_utils import check_recursion_limit
 from .base import FileBasedConstructor

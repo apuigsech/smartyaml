@@ -111,11 +111,6 @@ class StringOptimizations:
         if len(parts) == 1:
             return str(parts[0])
 
-        # Pre-calculate capacity for better memory efficiency
-        total_len = sum(len(str(part)) for part in parts) + len(separator) * (
-            len(parts) - 1
-        )
-
         # Use join which is more efficient than concatenation
         return separator.join(str(part) for part in parts)
 

@@ -2,10 +2,7 @@
 Inline template processor for SmartYAML __template directive.
 """
 
-from pathlib import Path
-from typing import Any, Dict, Optional, Union
-
-import yaml
+from typing import Any, Dict, Optional
 
 from ..exceptions import ConstructorError
 

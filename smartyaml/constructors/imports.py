@@ -2,12 +2,8 @@
 Import constructors for SmartYAML
 """
 
-from pathlib import Path
 from typing import Any, Dict
 
-import yaml
-
-from ..exceptions import SmartYAMLError
 from ..processing import (
     ParameterExtractor,
     ParameterPattern,
@@ -15,7 +11,6 @@ from ..processing import (
     ParameterValidator,
 )
 from ..utils.file_utils import read_file
-from ..utils.loader_utils import create_loader_context
 from ..utils.validation_utils import validate_filename
 from .base import FileBasedConstructor
 from .yaml_file_loader import YamlFileLoaderMixin
@@ -62,7 +57,6 @@ class ImportConstructor(FileBasedConstructor):
 
     def validate_parameters(self, params: Dict[str, Any]) -> None:
         """Custom validation (empty since using standardized validator)."""
-        pass
 
     def execute(self, loader, params: Dict[str, Any]) -> str:
         """Load and return file content as string."""

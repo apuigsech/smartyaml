@@ -2,14 +2,12 @@
 Conditional inclusion constructors for SmartYAML
 """
 
-from pathlib import Path
 from typing import Any, Dict
 
 import yaml
 
 from ..exceptions import SmartYAMLError
 from ..utils.file_utils import read_file
-from ..utils.loader_utils import create_loader_context
 from ..utils.validation_utils import validate_constructor_args
 from .base import ConditionalConstructor
 

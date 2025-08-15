@@ -2,7 +2,7 @@
 YAML merging utilities for SmartYAML
 """
 
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 
 def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:

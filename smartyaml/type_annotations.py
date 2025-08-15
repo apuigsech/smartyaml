@@ -15,13 +15,11 @@ from typing import (
     Protocol,
     TypeVar,
     Union,
-    overload,
 )
 
 if TYPE_CHECKING:
     import yaml
 
-    from .constructors.base import BaseConstructor
 
 # Type aliases for better code readability
 YAMLValue = Union[str, int, float, bool, List[Any], Dict[str, Any], None]

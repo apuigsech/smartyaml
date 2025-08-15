@@ -2,7 +2,7 @@
 SmartYAML exceptions
 """
 
-from typing import Any, Dict, Optional
+from typing import Optional
 
 import yaml
 
@@ -10,49 +10,33 @@ import yaml
 class SmartYAMLError(Exception):
     """Base exception for SmartYAML errors."""
 
-    pass
-
 
 class SmartYAMLFileNotFoundError(SmartYAMLError):
     """Raised when a referenced file cannot be found."""
-
-    pass
 
 
 class InvalidPathError(SmartYAMLError):
     """Raised when an invalid or unsafe path is provided."""
 
-    pass
-
 
 class EnvironmentVariableError(SmartYAMLError):
     """Raised when an environment variable is not found and no default is provided."""
-
-    pass
 
 
 class TemplatePathError(SmartYAMLError):
     """Raised when SMARTYAML_TMPL is not set or invalid."""
 
-    pass
-
 
 class Base64Error(SmartYAMLError):
     """Raised when base64 encoding/decoding fails."""
-
-    pass
 
 
 class ResourceLimitError(SmartYAMLError):
     """Raised when resource limits are exceeded."""
 
-    pass
-
 
 class RecursionLimitError(SmartYAMLError):
     """Raised when import recursion depth is exceeded."""
-
-    pass
 
 
 class ConstructorError(SmartYAMLError):

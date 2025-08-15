@@ -6,9 +6,8 @@ YAML files, eliminating code duplication between TemplateConstructor and
 ImportYamlConstructor.
 """
 
-import re
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import yaml
 
@@ -237,7 +236,7 @@ class YamlFileLoaderMixin:
             Dictionary of variables from __vars field, empty if not found or if parsing fails
         """
         try:
-            import re
+            pass
 
             import yaml
 

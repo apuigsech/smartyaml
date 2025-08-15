@@ -4,7 +4,7 @@ Extend constructor for SmartYAML.
 Allows extending/concatenating arrays from templates instead of replacing them.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from ..constants import EXTEND_MARKER_KEY
 from ..exceptions import ConstructorError

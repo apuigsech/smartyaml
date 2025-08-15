@@ -5,7 +5,7 @@ Encoding constructors for SmartYAML
 import base64
 from typing import Any, Dict
 
-from ..exceptions import Base64Error, ConstructorError
+from ..exceptions import ConstructorError
 from ..processing import (
     ParameterExtractor,
     ParameterPattern,

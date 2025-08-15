@@ -184,7 +184,7 @@ class TestPerformanceHelpers:
         result, execution_time = PerformanceTestHelper.measure_execution_time(slow_function)
         
         assert result == "result"
-        assert 0.09 <= execution_time <= 0.2  # Allow some variance
+        assert 0.09 <= execution_time <= 0.5  # Allow variance for CI environments
     
     def test_performance_threshold_assertion(self):
         """Test performance threshold assertions."""

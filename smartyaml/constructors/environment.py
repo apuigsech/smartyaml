@@ -4,9 +4,7 @@ Environment variable constructor for SmartYAML
 
 from typing import Any, Dict
 
-import yaml
-
-from ..exceptions import ConstructorError, EnvironmentVariableError
+from ..exceptions import ConstructorError
 from ..processing import (
     ParameterExtractor,
     ParameterPattern,
@@ -15,7 +13,6 @@ from ..processing import (
 )
 from ..utils.validation_utils import (
     get_env_var,
-    validate_constructor_args,
     validate_environment_variable,
 )
 from .base import EnvironmentBasedConstructor

@@ -122,7 +122,8 @@ def process_deferred_expansions(data: Any, variables: Dict[str, Any]) -> Any:
                         message=(
                             f"Variable expansion failed: {debug_info}\n"
                             f"To fix this, either:\n"
-                            f"1. Pass variables to load() function: load(file, variables={{'key': 'value'}})\n"
+                            f"1. Pass variables to load() function: "
+                            f"load(file, variables={{'key': 'value'}})\n"
                             f"2. Define __vars in your YAML: __vars: {{key: value}}\n"
                             f"3. Ensure all referenced variables are defined"
                         ),

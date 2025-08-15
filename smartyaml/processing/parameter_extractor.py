@@ -4,11 +4,11 @@ Standardized parameter extraction system for SmartYAML constructors
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import yaml
 
-from ..exceptions import ConstructorError, ErrorFactory
+from ..exceptions import ConstructorError
 from ..utils import validate_constructor_args
 
 
@@ -294,7 +294,8 @@ class ParameterExtractor:
                     raise ConstructorError(
                         None,
                         None,
-                        f"{directive_name}: Parameter '{name}' must be {spec.param_type.__name__}, got {type(value).__name__}",
+                        f"{directive_name}: Parameter '{name}' must be {spec.param_type.__name__}, "
+                        f"got {type(value).__name__}",
                         None,
                     )
 

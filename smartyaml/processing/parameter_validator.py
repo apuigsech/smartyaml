@@ -5,7 +5,7 @@ Parameter validation system for SmartYAML constructors
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-from ..exceptions import ConstructorError, ErrorFactory
+from ..exceptions import ErrorFactory
 
 
 class ValidationRule(ABC):
@@ -23,7 +23,6 @@ class ValidationRule(ABC):
         Raises:
             ConstructorError: If validation fails
         """
-        pass
 
 
 class RequiredParameterRule(ValidationRule):

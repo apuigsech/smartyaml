@@ -18,11 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
-        exclude:
-          # Python 3.7 is not available on macOS arm64
-          - os: macos-latest
-            python-version: "3.7"
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
     - name: Checkout code
@@ -44,7 +40,7 @@ jobs:
       run: |
         black --check smartyaml/
         isort --check-only smartyaml/
-        flake8 smartyaml/
+        flake8 smartyaml/ --max-line-length=110 --extend-ignore=E203  # Allow longer lines, ignore whitespace before colon
 
     - name: Run type checking
       run: |

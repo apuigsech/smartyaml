@@ -7,7 +7,7 @@ name = "smartyaml"
 version = "0.1.0"
 description = "Extended YAML format with custom directives for imports, environment variables, and more"
 readme = {file = "README.md", content-type = "text/markdown"}
-license = "MIT"
+license = {text = "MIT"}
 authors = [
     {name = "Albert Puigsech", email = "albert@puigsech.com"}
 ]
@@ -19,8 +19,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -29,7 +27,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing :: Markup",
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 dependencies = [
     "PyYAML>=5.1",
 ]
@@ -124,7 +122,7 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-python_version = "3.7"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -147,7 +145,7 @@ ignore_missing_imports = true
 
 [tool.black]
 line-length = 88
-target-version = ['py37', 'py38', 'py39', 'py310', 'py311', 'py312']
+target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -176,7 +174,7 @@ known_first_party = ["smartyaml"]
 known_third_party = ["yaml", "pytest"]
 
 [tool.flake8]
-max-line-length = 88
+max-line-length = 100
 extend-ignore = [
     "E203",  # whitespace before ':'
     "E501",  # line too long

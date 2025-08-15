@@ -6,7 +6,7 @@ and improve maintainability across constructors and loaders.
 """
 
 from pathlib import Path
-from typing import Any, Dict, Optional, Set, Type, Union
+from typing import Any, Dict, Optional, Set, Type
 
 import yaml
 
@@ -206,7 +206,7 @@ def load_yaml_for_anchor_extraction(
 
     def extract_anchors():
         # Import here to avoid circular dependencies
-        from ..constructors.yaml_file_loader import create_loader_context
+        pass
 
         # Create anchor-capturing loader
         AnchorCapturingLoader = create_anchor_capturing_loader(

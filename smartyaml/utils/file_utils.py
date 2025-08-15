@@ -6,7 +6,7 @@ import hashlib
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 from ..config import get_config
 from ..exceptions import ResourceLimitError, SmartYAMLFileNotFoundError
@@ -92,7 +92,7 @@ class FileCache:
 
     def _maybe_cleanup(self) -> None:
         """Perform lazy cleanup if enough time has passed since last cleanup."""
-        config = get_config()
+        get_config()
         current_time = time.time()
 
         # Only cleanup every 5 minutes to avoid overhead

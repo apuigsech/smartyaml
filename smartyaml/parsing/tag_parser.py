@@ -4,11 +4,10 @@ Tag parsing system for SmartYAML
 
 import re
 from dataclasses import dataclass
-from typing import List, Optional, Pattern, Union
+from typing import List, Optional, Pattern
 
 import yaml
 
-from ..exceptions import ConstructorError
 from .parameter_processors import SmartParameterProcessor
 
 

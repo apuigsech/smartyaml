@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 import yaml
 
 if TYPE_CHECKING:
-    from .type_annotations import YAMLLoader, YAMLNode
+    pass
 
 from .registry import get_registry, register_default_constructors
 

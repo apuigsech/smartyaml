@@ -3,8 +3,6 @@ Tests for the !extend directive functionality.
 """
 
 import pytest
-import tempfile
-from pathlib import Path
 
 import smartyaml
 from smartyaml.exceptions import ConstructorError
@@ -86,12 +84,12 @@ tests: !extend
         template_file = tmp_path / "template.yaml"
         template_file.write_text("""
 evaluations:
-  - criteria: "accuracy"
+  - criteria: "metric_x"
     weight: 1.0
     thresholds:
       min: 0.8
       max: 1.0
-  - criteria: "speed"
+  - criteria: "metric_y"
     weight: 0.5
 """)
 
@@ -101,9 +99,9 @@ __template:
   <<: !import_yaml(template.yaml)
 
 evaluations: !extend
-  - criteria: "custom_metric"
+  - criteria: "metric_z"
     weight: 0.9
-    description: "Company-specific evaluation"
+    description: "Extended metric"
     thresholds:
       min: 0.7
 """)
@@ -113,12 +111,12 @@ evaluations: !extend
         assert len(result["evaluations"]) == 3
         
         # First two should be from template
-        assert result["evaluations"][0]["criteria"] == "accuracy"
-        assert result["evaluations"][1]["criteria"] == "speed"
+        assert result["evaluations"][0]["criteria"] == "metric_x"
+        assert result["evaluations"][1]["criteria"] == "metric_y"
         
         # Third should be the extended one
         custom_eval = result["evaluations"][2]
-        assert custom_eval["criteria"] == "custom_metric"
+        assert custom_eval["criteria"] == "metric_z"
         assert custom_eval["weight"] == 0.9
         assert custom_eval["thresholds"]["min"] == 0.7
 
@@ -127,7 +125,7 @@ evaluations: !extend
         template_file = tmp_path / "base.yaml"
         template_file.write_text("""
 __vars:
-  base_name: "BaseItem"
+  base_name: "ItemA"
   
 items:
   - name: !expand "{{base_name}} 1"
@@ -137,7 +135,7 @@ items:
         main_file = tmp_path / "main.yaml"
         main_file.write_text("""
 __vars:
-  custom_name: "CustomItem"
+  custom_name: "ItemB"
 
 __template:
   <<: !import_yaml(base.yaml)
@@ -152,9 +150,9 @@ items: !extend
         result = smartyaml.load(main_file)
         
         assert len(result["items"]) == 3
-        assert result["items"][0]["name"] == "BaseItem 1"
-        assert result["items"][1]["name"] == "CustomItem A"
-        assert result["items"][2]["name"] == "BaseItem Extended"
+        assert result["items"][0]["name"] == "ItemA 1"
+        assert result["items"][1]["name"] == "ItemB A"
+        assert result["items"][2]["name"] == "ItemA Extended"
 
     def test_extend_empty_base_array(self, tmp_path):
         """Test extending when base array is empty."""
@@ -171,13 +169,13 @@ __template:
   <<: !import_yaml(empty_base.yaml)
 
 empty_list: !extend
-  - "new_item_1"
-  - "new_item_2"
+  - "data_x1"
+  - "data_x2"
 """)
 
         result = smartyaml.load(main_file)
         
-        assert result["empty_list"] == ["new_item_1", "new_item_2"]
+        assert result["empty_list"] == ["data_x1", "data_x2"]
         assert result["config"]["setting"] == "value"
 
     def test_extend_no_base_array(self, tmp_path):
@@ -194,14 +192,14 @@ __template:
   <<: !import_yaml(no_array.yaml)
 
 new_list: !extend
-  - "item1"
-  - "item2"
+  - "data_1"
+  - "data_2"
 """)
 
         result = smartyaml.load(main_file)
         
         # Should create new array
-        assert result["new_list"] == ["item1", "item2"]
+        assert result["new_list"] == ["data_1", "data_2"]
         assert result["config"]["timeout"] == 60
 
     def test_extend_type_mismatch_fallback(self, tmp_path):
@@ -217,14 +215,14 @@ __template:
   <<: !import_yaml(mismatch.yaml)
 
 field: !extend
-  - "item1"
-  - "item2"
+  - "data_1"
+  - "data_2"
 """)
 
         result = smartyaml.load(main_file)
         
         # Should fallback to replacement
-        assert result["field"] == ["item1", "item2"]
+        assert result["field"] == ["data_1", "data_2"]
 
     def test_extend_with_non_array_error(self):
         """Test that !extend with non-array raises error."""
@@ -241,8 +239,8 @@ items: !extend "not_an_array"
         """Test extending with empty array."""
         yaml_content = """
 items: 
-  - "existing1"
-  - "existing2"
+  - "data_1"
+  - "data_2"
 
 extended: !extend []
 """
@@ -251,7 +249,7 @@ extended: !extend []
         
         # Empty extend should result in empty array since no base
         assert result["extended"] == []
-        assert result["items"] == ["existing1", "existing2"]
+        assert result["items"] == ["data_1", "data_2"]
 
     def test_nested_extend_support(self, tmp_path):
         """Test !extend in nested structures."""
@@ -272,13 +270,13 @@ __template:
 
 section1:
   items: !extend
-    - "extended1"
-    - "extended2"
+    - "data_c1"
+    - "data_c2"
 """)
 
         result = smartyaml.load(main_file)
         
-        expected_items = ["base1", "base2", "extended1", "extended2"]
+        expected_items = ["base1", "base2", "data_c1", "data_c2"]
         assert result["section1"]["items"] == expected_items
         assert result["section2"]["config"] == "value"
 
@@ -300,81 +298,81 @@ __template:
   <<: !import_yaml(multi_arrays.yaml)
 
 list1: !extend
-  - "extend1_1"
+  - "ext1_1"
 
 list2: !extend
-  - "extend2_1"
-  - "extend2_2"
+  - "ext2_1"
+  - "ext2_2"
 
 # list3 without extend - should be replaced
 list3:
-  - "replace3_1"
+  - "rep3_1"
 """)
 
         result = smartyaml.load(main_file)
         
-        assert result["list1"] == ["base1_1", "extend1_1"]
-        assert result["list2"] == ["base2_1", "extend2_1", "extend2_2"] 
-        assert result["list3"] == ["replace3_1"]  # Replaced, not extended
+        assert result["list1"] == ["base1_1", "ext1_1"]
+        assert result["list2"] == ["base2_1", "ext2_1", "ext2_2"] 
+        assert result["list3"] == ["rep3_1"]  # Replaced, not extended
 
-    def test_maxcolchon_use_case(self, tmp_path):
-        """Test the specific MaxColchon use case that motivated this feature."""
-        # Base customer support template
-        base_template = tmp_path / "customer_support.yaml"
+    def test_template_array_extension_scenario(self, tmp_path):
+        """Test template array extension with multiple item types."""
+        # Base template
+        base_template = tmp_path / "template_base.yaml"
         base_template.write_text("""
 tests:
-  - id: "offtopic-crypto"
-    name: "Off-topic: cryptocurrency"
-    type: "offtopic"
-  - id: "offtopic-football" 
-    name: "Off-topic: football trivia"
-    type: "offtopic"
-  - id: "offtopic-recovery"
-    name: "Follow-up after off-topic"
-    type: "offtopic"
+  - id: "type_a_001"
+    name: "Generic Type A Test 1"
+    type: "type_a"
+  - id: "type_a_002" 
+    name: "Generic Type A Test 2"
+    type: "type_a"
+  - id: "type_a_003"
+    name: "Generic Type A Test 3"
+    type: "type_a"
 
 config:
   timeout: 300
-  language: "en"
-""")
+  language: "xx"
+""", encoding='utf-8')
 
-        # MaxColchon specific agent
-        agent_file = tmp_path / "maxcolchon_agent.yaml"
-        agent_file.write_text("""
+        # Extended configuration
+        extended_file = tmp_path / "extended_config.yaml"
+        extended_file.write_text("""
 __vars:
-  company_name: "MaxColchon"
+  entity_name: "EntityX"
 
 __template:
-  <<: !import_yaml(customer_support.yaml)
+  <<: !import_yaml(template_base.yaml)
 
 tests: !extend
-  - id: "specific-product-info-sojamax"
-    name: "Specific Product Information - Colchón Sojamax"
-    type: "product_specific"
-  - id: "concrete-recommendation-hot-sleeper"
-    name: "Concrete Product Recommendation - Hot Sleeper" 
-    type: "product_specific"
-  - id: "vague-request-better-sleep"
-    name: "Vague Request - Better Sleep"
-    type: "product_specific"
-""")
+  - id: "type_b_001"
+    name: "Generic Type B Test 1"
+    type: "type_b"
+  - id: "type_b_002"
+    name: "Generic Type B Test 2" 
+    type: "type_b"
+  - id: "type_b_003"
+    name: "Generic Type B Test 3"
+    type: "type_b"
+""", encoding='utf-8')
 
-        result = smartyaml.load(agent_file)
+        result = smartyaml.load(extended_file)
         
-        # Should have 6 tests total: 3 offtopic + 3 MaxColchon specific
+        # Should have 6 tests total: 3 type_a + 3 type_b
         assert len(result["tests"]) == 6
         
-        # First three should be from base template (offtopic)
-        offtopic_tests = [t for t in result["tests"] if t["type"] == "offtopic"]
-        assert len(offtopic_tests) == 3
+        # First three should be from base template (type_a)
+        type_a_tests = [t for t in result["tests"] if t["type"] == "type_a"]
+        assert len(type_a_tests) == 3
         
-        # Last three should be MaxColchon specific  
-        product_tests = [t for t in result["tests"] if t["type"] == "product_specific"]
-        assert len(product_tests) == 3
+        # Last three should be type_b  
+        type_b_tests = [t for t in result["tests"] if t["type"] == "type_b"]
+        assert len(type_b_tests) == 3
         
         # Verify order: base tests first, then extended
-        assert result["tests"][0]["id"] == "offtopic-crypto"
-        assert result["tests"][3]["id"] == "specific-product-info-sojamax"
+        assert result["tests"][0]["id"] == "type_a_001"
+        assert result["tests"][3]["id"] == "type_b_001"
         
         # Config should be inherited normally
         assert result["config"]["timeout"] == 300
@@ -396,13 +394,13 @@ __template:
   <<: !import_yaml(null_base.yaml)
 
 field: !extend
-  - "item1"
+  - "data_1"
 """)
 
         result = smartyaml.load(main_file)
         
         # Should create new array
-        assert result["field"] == ["item1"]
+        assert result["field"] == ["data_1"]
 
     def test_extend_preserves_order(self, tmp_path):
         """Test that extend preserves item order."""

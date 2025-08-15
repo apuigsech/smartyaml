@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional, Set, Union
 from ..config import get_config
 from ..exceptions import (
     ConstructorError,
-    EnvironmentVariableError,
     RecursionLimitError,
     TemplatePathError,
 )

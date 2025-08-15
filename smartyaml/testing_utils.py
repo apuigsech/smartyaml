@@ -8,12 +8,12 @@ import os
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import pytest
 
 if TYPE_CHECKING:
-    from .type_annotations import ParameterDict, YAMLValue
+    pass
 
 
 class SmartYAMLTestCase:
@@ -236,7 +236,6 @@ class ConstructorTestHelper:
         values: List[str], tag: str = "tag:yaml.org,2002:seq"
     ) -> Any:
         """Create a mock sequence YAML node."""
-        from unittest.mock import Mock
 
         # Create scalar nodes for each value
         value_nodes = [ConstructorTestHelper.create_scalar_node(v) for v in values]

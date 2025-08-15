@@ -98,7 +98,6 @@ class VariableMerger:
         Returns:
             Fully expanded variables dictionary
         """
-        from ..utils.variable_substitution import VariableSubstitutionEngine
 
         expanded_vars = variables.copy()
 

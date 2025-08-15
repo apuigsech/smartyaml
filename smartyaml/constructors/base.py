@@ -6,23 +6,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 
 import yaml
 
 from ..error_context import ErrorContextBuilder, enhance_error_with_context
-from ..exceptions import ConstructorError, SmartYAMLError
+from ..exceptions import ConstructorError
 from ..processing import ParameterExtractor, ParameterValidator, TypeConverter
-from ..utils.validation_utils import add_context_to_error
-
-if TYPE_CHECKING:
-    from ..type_annotations import (
-        ContextDict,
-        LoaderContextType,
-        ParameterDict,
-        YAMLLoader,
-        YAMLNode,
-    )
 
 
 class BaseConstructor(ABC):
@@ -130,7 +120,6 @@ class BaseConstructor(ABC):
         Raises:
             ConstructorError: If parameter extraction fails
         """
-        pass
 
     def validate_parameters(self, params: Dict[str, Any]) -> None:
         """
@@ -143,7 +132,6 @@ class BaseConstructor(ABC):
             ConstructorError: If parameters are invalid
         """
         # Default implementation - can be overridden
-        pass
 
     def apply_security_checks(self, loader, params: Dict[str, Any]) -> None:
         """
@@ -157,7 +145,6 @@ class BaseConstructor(ABC):
             SecurityError: If security checks fail
         """
         # Default implementation - can be overridden
-        pass
 
     @abstractmethod
     def execute(self, loader: yaml.SafeLoader, params: Dict[str, Any]) -> Any:
@@ -171,7 +158,6 @@ class BaseConstructor(ABC):
         Returns:
             The constructed value
         """
-        pass
 
     def post_process(self, result: Any, params: Dict[str, Any]) -> Any:
         """
