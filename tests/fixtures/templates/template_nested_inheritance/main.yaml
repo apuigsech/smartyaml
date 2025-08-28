@@ -1,0 +1,16 @@
+# Main application configuration that inherits from service template
+__template:
+  use: 'apps.web-service'
+
+app:
+  name: "my-web-app"
+  version: "2.1.0"  # Override intermediate template
+  features:
+    - "advanced-auth"  # Add to base features
+
+database:
+  name: "my_web_app_db"  # Override base database name
+
+monitoring:
+  alerts:
+    - "high-cpu"  # Add to base monitoring

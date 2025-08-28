@@ -1,0 +1,35 @@
+# Expected result after 3-level template inheritance: main -> web-service -> base service
+app:
+  name: "my-web-app"
+  type: "web-service"
+  version: "2.1.0"
+  features:
+    - "advanced-auth"
+
+database:
+  host: "localhost"
+  port: 5432
+  name: "my_web_app_db"
+  ssl: true
+
+monitoring:
+  enabled: true
+  interval: "30s"
+  alerts:
+    - "high-cpu"
+
+resources:
+  cpu: "100m"
+  memory: "128Mi"
+
+config:
+  log_level: "info"
+  timeout: 30
+
+server:
+  port: 8080
+  protocol: "http"
+
+endpoints:
+  health: "/health"
+  metrics: "/metrics"

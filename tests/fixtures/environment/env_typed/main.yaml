@@ -1,0 +1,12 @@
+config:
+  port: !env_int ['PORT', 3000]
+  offset: !env_int ['NEGATIVE', 0]
+  missing: !env_int ['MISSING_INT', 9000]
+  pi: !env_float ['PI', 0.0]
+  number: !env_float ['INTEGER', 0.0]
+  missing_float: !env_float ['MISSING_FLOAT', 1.5]
+  enabled: !env_bool ['TRUE_VAR', false]
+  disabled: !env_bool ['FALSE_VAR', true]
+  yes_val: !env_bool ['YES_VAR', false]
+  no_val: !env_bool ['NO_VAR', true]
+  missing_bool: !env_bool ['MISSING_BOOL', true]

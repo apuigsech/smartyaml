@@ -1,0 +1,63 @@
+# Schema Validation Example
+# Demonstrates JSON Schema validation of final configuration
+
+__version: "1.0.0"
+
+__vars:
+  service_name: "payment-service"
+  replicas: 3
+  version: "1.2.3"
+
+# Define schema for validation
+__schema:
+  type: object
+  properties:
+    service:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        replicas:
+          type: integer
+          minimum: 1
+          maximum: 10
+        version:
+          type: string
+          pattern: "^\\d+\\.\\d+\\.\\d+$"
+        resources:
+          type: object
+          properties:
+            memory:
+              type: string
+            cpu:
+              type: string
+          required: [memory, cpu]
+      required: [name, replicas, version, resources]
+    database:
+      type: object
+      properties:
+        host:
+          type: string
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+        ssl:
+          type: boolean
+      required: [host, port]
+  required: [service, database]
+
+# Configuration that will be validated against the schema
+service:
+  name: !var "service_name"
+  replicas: !var "replicas"
+  version: !var "version"
+  resources:
+    memory: "512Mi"
+    cpu: "500m"
+
+database:
+  host: "postgres.example.com"
+  port: 5432
+  ssl: true

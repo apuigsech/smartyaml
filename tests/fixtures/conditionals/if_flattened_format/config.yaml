@@ -1,0 +1,6 @@
+description: "Test flattened format for !if directive (recommended syntax)"
+env_vars:
+  ENABLE_MODERN: "true"
+  ENABLE_COMPLEX_MODERN: "1"
+  ENABLE_BOOLEAN: "yes"
+  # DISABLED_FEATURE is intentionally not set

@@ -1,0 +1,5 @@
+__vars:
+  test_var: "no_version_specified"
+
+config:
+  message: "{{test_var}}"

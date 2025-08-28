@@ -1,0 +1,5 @@
+app:
+  name: "MyApp"
+  version: "1.0"
+
+database_config: !include 'included.yaml'

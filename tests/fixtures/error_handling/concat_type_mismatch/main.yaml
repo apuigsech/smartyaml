@@ -1,0 +1,5 @@
+# Error: concatenating incompatible types
+result: !concat [
+  ["item1", "item2"],
+  "not_an_array"  # Cannot concat array with string
+]

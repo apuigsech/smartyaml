@@ -1,0 +1,3 @@
+description: "Error case: !include with nonexistent file should raise FileNotFoundError"
+
+expected_error: "FileNotFoundError"

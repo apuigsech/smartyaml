@@ -1,0 +1,15 @@
+__vars:
+  env_var_name: "DYNAMIC_HOST"
+  file_path: "configs/dynamic"
+  switch_env_var: "MODE"
+
+config:
+  host: !env ["{{env_var_name}}", 'localhost']
+  data: !include "{{file_path}}.yaml"
+  mode: !switch
+    var: "{{switch_env_var}}"
+    cases:
+      - case: "production"
+        value: "prod_config"
+      - case: "development" 
+        value: "dev_config"

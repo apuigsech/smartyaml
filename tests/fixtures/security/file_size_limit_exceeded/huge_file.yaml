@@ -1,0 +1,9 @@
+# This file simulates a very large file that exceeds security limits
+# In a real scenario, this would be much larger (multiple MB)
+data:
+  massive_string: "A" * 10000  # 10KB string to simulate large content
+  repeat_data:
+    - item: "Large content block 1"
+    - item: "Large content block 2"
+    - item: "Large content block 3"
+    # ... (in reality, this would have thousands of items)

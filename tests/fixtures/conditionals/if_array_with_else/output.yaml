@@ -1,0 +1,7 @@
+server_mode: 'client mode'  # SERVER_ENABLED not set -> else (third element)
+port_config: 8080  # HIGH_PERFORMANCE=true -> then (second element)
+log_format:  # DETAILED_LOGS=1 -> then (second element)
+  level: 'debug'
+  format: 'json'
+  timestamp: true
+secure_mode: false  # SECURITY_ENABLED=false -> else (third element)

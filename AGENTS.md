@@ -1,19 +1,28 @@
 # AGENTS.md
 
-This file provides guidance to AI agents when working with code in this repository.
+This file provides comprehensive guidance to AI agents when working with code in this repository.
 
 ## Project Overview
 
-SmartYAML is an extended YAML format library that adds custom directives for file imports, environment variables, conditional processing, and templates. It extends standard YAML with powerful features while maintaining full compatibility.
+SmartYAML is a powerful YAML processing library that extends standard YAML parsing with advanced features for templating, variable substitution, environment variable integration, conditional logic, and schema validation. It processes input YAML files through a comprehensive pipeline to resolve all special constructs and output plain YAML data structures.
+
+**Key Concepts:**
+- **Metadata Fields**: Fields prefixed with `__` (e.g., `__vars`, `__template`, `__schema`) define processing behavior
+- **Directives**: Custom YAML tags (e.g., `!env`, `!include`, `!merge`) trigger specific processing behaviors
+- **Processing Pipeline**: 6-stage processing (parsing → metadata → templates → directives → variables → validation)
+- **Variable Substitution**: Jinja-like syntax (`{{var}}`) with inheritance and precedence
+- **Template System**: Powerful inheritance and overlay system with `__template`
+- **Schema Validation**: JSON Schema validation of final resolved YAML
 
 ## Key Commands
 
 ### Testing
 ```bash
-python -m pytest                    # Run all tests
-python -m pytest tests/test_imports.py  # Run specific test file
+python -m pytest                    # Run all tests (230+ tests)
+python -m pytest tests/test_directives.py  # Run specific test module
 python -m pytest -v                 # Verbose test output
 python -m pytest --cov=smartyaml    # Run with coverage (requires pytest-cov)
+python -m pytest -k "env"           # Run tests matching pattern
 ```
 
 ### Installation & Setup
@@ -25,8 +34,8 @@ pip install -e ".[test]"           # Install with testing dependencies
 
 ### Package Building
 ```bash
-python -m build                    # Build distribution packages (requires build package)
-pip install build                  # Install build tool if needed
+python -m build                     # Build distribution packages (requires build package)
+pip install build                   # Install build tool if needed
 python -m build --sdist            # Build source distribution only
 python -m build --wheel            # Build wheel only
 ```
@@ -47,176 +56,215 @@ python -c "import smartyaml; print(smartyaml.load('basic_example.yaml'))"
 
 ## Architecture Overview
 
+SmartYAML follows a modular, pipeline-based architecture with clear separation of concerns:
+
 ### Core Components
 
-- **smartyaml/__init__.py**: Main API with `load()`, `loads()`, and `dump()` functions
-- **smartyaml/loader.py**: `SmartYAMLLoader` class that extends `yaml.SafeLoader` with custom constructors
-- **smartyaml/constructors/**: Directory containing all custom YAML constructors:
-  - `imports.py`: `!import` and `!import_yaml` for file inclusion
-  - `environment.py`: `!env` for environment variables
-  - `conditional.py`: `!include_if` and `!include_yaml_if` for conditional includes
-  - `templates.py`: `!template` for centralized template loading
-  - `encoding.py`: `!base64` and `!base64_decode` for encoding operations
-- **smartyaml/merge.py**: YAML merging logic for `!import_yaml` with local overrides
-- **smartyaml/exceptions.py**: Custom exception hierarchy
-- **smartyaml/utils/**: Utility modules for file operations, path resolution, and validation
+**Main API (`smartyaml/__init__.py`)**
+- `load()`, `loads()`, `load_file()` - Primary loading functions
+- `load_secure()`, `load_with_templates()` - Convenience functions
+- Complete exception hierarchy export
 
-### SmartYAML Directives
+**Configuration System (`smartyaml/config/`)**
+- `core.py` - Core configuration classes (SecurityConfig, PathConfig, etc.)
+- `main.py` - Main SmartYAMLConfig class
+- `builder.py` - Fluent configuration builder with presets
+- `security.py`, `processing.py`, `performance.py`, `paths.py` - Modular config components
 
-The library supports these custom YAML tags:
-- `!import(file)`: Load text file content as string
-- `!import_yaml(file)`: Load and merge YAML files with local overrides
-- `!env(VAR, default)`: Read environment variables with optional defaults
-- `!include_if(condition, file)`: Conditional text file inclusion
-- `!include_yaml_if(condition, file)`: Conditional YAML file inclusion
-- `!template(name)`: Load templates from `$SMARTYAML_TMPL` directory
-- `!base64(data)` / `!base64_decode(data)`: Base64 encoding/decoding
-- `!expand(text)`: Variable substitution using `{{key}}` syntax
+**Processing Pipeline (`smartyaml/pipeline/`)**
+- `processor.py` - Main SmartYAMLProcessor orchestrating the 6-stage pipeline
+- `parser.py` - Stage 1: YAML parsing with custom constructors (SmartYAMLLoader)
+- `metadata.py` - Stage 2: Metadata resolution (`__vars`, `__schema`, etc.)
+- `templates.py` - Stage 3: Template processing and inheritance
+- `directives.py` - Stage 4: Directive processing (recursive, depth-first)
+- `variables.py` - Stage 5: Variable expansion with Jinja-like syntax
+- `validator.py` - Stage 6: Schema validation using JSON Schema
+
+**Error Handling System (`smartyaml/errors/`)**
+- `context.py` - ErrorContext and ErrorContextBuilder for standardized error reporting
+- `helpers.py` - Validation helpers and error utilities
+- Integrated with all pipeline components for consistent error reporting
+
+**Utilities (`smartyaml/utils/`)**
+- `merge.py` - Unified DeepMerger with configurable strategies
+- `recursion.py` - RecursiveProcessor utilities with cycle detection
+- `validation.py` - Common validation helpers
+
+### SmartYAML Processing Pipeline
+
+The library processes YAML through 6 sequential stages:
+
+**Stage 1: Initial Parsing & Version Check**
+- Parse YAML with custom constructors for directives
+- Extract metadata fields (`__*`)
+- Check `__version` compatibility
+- Build directive AST for later processing
+
+**Stage 2: Metadata Resolution** 
+- Resolve `__vars` (process directives within, merge with external variables)
+- Resolve `__template` (load and prepare template inheritance)
+- Resolve `__schema` (process directives to build JSON Schema)
+
+**Stage 3: Template Processing**
+- Load template files recursively
+- Apply overlay logic (deep merge vs replace)
+- Inherit variables from templates with proper precedence
+
+**Stage 4: Directive Processing (Recursive, Depth-First)**
+- Process all directives in dependency order
+- Handle file inclusion, environment variables, conditionals, merging
+- Recursive processing of included files through stages 1-4
+
+**Stage 5: Variable Expansion**
+- Global `{{var}}` substitution using resolved variables
+- Support for nested variables and defaults
+- Jinja-like syntax with proper escaping
+
+**Stage 6: Schema Validation & Final Output**
+- Validate against resolved `__schema` using jsonschema
+- Remove metadata fields
+- Return final resolved YAML structure
+
+### SmartYAML Directives (SPECS-v1.md)
+
+**Environment Variables:**
+- `!env ['VAR_NAME', 'default']` - Environment variable access
+- `!secret ['SECRET_VAR', 'default']` - Same as !env (future: secure stores)
+
+**File Inclusion:**
+- `!include 'file.yaml'` - Include and process file content
+- `!include_if ['CONDITION', 'file.yaml']` - Conditional inclusion
+- `!include_yaml 'file.yaml'` - Include raw YAML (no directive processing)
+- `!include_yaml_if ['CONDITION', 'file.yaml']` - Conditional raw YAML
+
+**Template System:**
+- `!template 'template.name'` - Load from template directory
+- `!template_if ['CONDITION', 'template.name']` - Conditional template loading
+
+**Data Operations:**
+- `!merge [item1, item2, ...]` - Deep merge multiple structures
+- `!concat [item1, item2, ...]` - Concatenate arrays/lists
+
+**Variable Operations:**
+- `!expand 'text with {{variables}}'` - String expansion with variables
+
+**Conditionals:**
+- `!if ['ENV_VAR', value]` - Conditional inclusion
+- `!switch ['ENV_VAR', [cases...]]` - Multi-way conditionals
 
 ### Metadata Fields
 
-SmartYAML automatically removes fields prefixed with `__` (double underscore) from the final parsed result. These metadata fields serve as annotations and documentation within YAML files but don't appear in the loaded data structure.
+**Core Metadata (automatically removed from final output):**
+- `__version: "1.0.0"` - Version compatibility check
+- `__vars: {}` - Variable definitions with inheritance
+- `__template: {}` - Template inheritance configuration  
+- `__schema: {}` - JSON Schema for validation
 
-**Features:**
-- Fields starting with `__` are removed during post-processing
-- Metadata fields can contain SmartYAML directives (processed then removed)
-- Removal works recursively through nested structures and lists
-- Can be disabled by setting `remove_metadata=False` in `load()` or `loads()`
+**Variable System:**
+Variables support inheritance and precedence:
+1. Function parameters (highest precedence)
+2. Document `__vars` (medium precedence) 
+3. Template `__vars` (lowest precedence)
 
-**Examples:**
+**Template System:**
 ```yaml
-# Input YAML
-app_name: "MyApp"
-__version: "1.2.3"           # Metadata - removed
-__build_info: !env(BUILD_DATE) # Metadata with directive - removed
-database:
-  host: "localhost"
-  __notes: "Primary DB"      # Nested metadata - removed
-
-# Resulting data structure
-{
-  'app_name': 'MyApp',
-  'database': {
-    'host': 'localhost'
-  }
-}
+__template:
+  path: 'templates/base.yaml'  # Direct path
+  use: 'base.config'          # Template name (loads from template_path)
+  overlay: true               # true = merge, false = replace
 ```
-
-### Variable Expansion
-
-SmartYAML supports variable substitution using the `!expand` directive and `{{key}}` syntax. Variables can be provided via function parameters or defined using the special `__vars` metadata field.
-
-**Features:**
-- Use `!expand "text with {{variables}}"` to substitute variables
-- Variables from `load()` function parameters take priority over `__vars` metadata
-- Variables can contain any data type (converted to string for substitution)
-- Supports escaping literal braces with `\\{{text}}`
-- Works with nested data structures and lists
-- Automatic error reporting for undefined variables
-
-**Variable Sources (priority order):**
-1. `variables` parameter passed to `load()` or `loads()` functions
-2. `__vars` metadata field in YAML (removed from final result)
-
-**Examples:**
-
-```python
-# Using function variables
-variables = {"name": "Alice", "env": "prod"}
-result = smartyaml.loads('greeting: !expand "Hello {{name}} in {{env}}!"', variables=variables)
-# Result: {"greeting": "Hello Alice in prod!"}
-
-# Using __vars metadata
-yaml_content = '''
-__vars:
-  app: "MyApp"  
-  version: "2.1.0"
-
-title: !expand "{{app}} v{{version}}"
-endpoint: !expand "https://api.{{app}}.com"
-'''
-result = smartyaml.loads(yaml_content)
-# Result: {"title": "MyApp v2.1.0", "endpoint": "https://api.MyApp.com"}
-
-# Function variables override __vars
-yaml_content = '''
-__vars:
-  env: "development"
-  
-config: !expand "Running in {{env}} mode"
-'''
-result = smartyaml.loads(yaml_content, variables={"env": "production"})
-# Result: {"config": "Running in production mode"}
-```
-
-**Integration with Other Directives:**
-Variables work seamlessly with other SmartYAML features:
-
-```yaml
-__vars:
-  config_file: "database"
-  environment: "prod"
-  
-# Variable expansion in file imports
-database: !import_yaml("{{config_file}}_{{environment}}.yaml")
-
-# Variable expansion with environment variables  
-connection: !expand "host={{database_host}}"
-database_host: !env(DB_HOST, "localhost")
-
-# Variable expansion in conditional includes
-debug_config: !include_yaml_if(DEBUG, "debug_{{environment}}.yaml")
-```
-
-### Testing Structure
-
-Tests are organized by constructor type:
-- `tests/test_imports.py`: File import functionality
-- `tests/test_environment.py`: Environment variable handling
-- `tests/test_conditional.py`: Conditional inclusion logic
-- `tests/test_encoding.py`: Base64 encoding/decoding
-- `tests/test_expansion.py`: Variable expansion functionality
-- `tests/test_metadata.py`: Metadata field removal functionality
-- `tests/test_advanced_features.py`: Advanced testing scenarios
-- `tests/fixtures/`: Test YAML files and sample data
 
 ### Security Features
 
-- File size limits (default 10MB, configurable)
-- Import recursion depth limits (default 10 levels)
-- Path traversal protection
-- Circular import detection
-- Safe YAML parsing (extends SafeLoader)
-- Environment variable access only (no code execution)
+- **Path Sanitization**: All file paths normalized and validated
+- **Directory Restrictions**: Prevent path traversal attacks
+- **File Size Limits**: Configurable limits (default 10MB)
+- **Recursion Protection**: Max depth limits prevent infinite recursion
+- **Cycle Detection**: Prevents circular includes
+- **Environment Variable Controls**: Whitelist/blacklist support
+- **Sandbox Mode**: Restricts file and environment access
+- **No Code Execution**: Safe YAML parsing only
+
+### Testing Structure
+
+Tests are comprehensively organized:
+- `tests/test_directives.py` - All directive functionality
+- `tests/test_errors.py` - Error handling and exceptions
+- `tests/test_metadata.py` - Metadata field processing
+- `tests/test_templates.py` - Template inheritance system
+- `tests/test_variables.py` - Variable expansion system
+- `tests/test_integration.py` - End-to-end scenarios
+- `tests/test_security.py` - Security features
+- `tests/test_processing_order.py` - Pipeline stage validation
+- `tests/test_edge_cases.py` - Edge cases and error conditions
+- `tests/fixtures/` - Test YAML files and sample data
+
+### Error Handling
+
+SmartYAML provides a comprehensive exception hierarchy:
+- `SmartYAMLError` - Base exception with file/field context
+- `VersionMismatchError` - Version compatibility issues
+- `FileNotFoundError` - Missing referenced files
+- `DirectiveSyntaxError` - Invalid directive syntax
+- `VariableNotFoundError` - Undefined variable references
+- `RecursionLimitExceededError` - Recursion/cycle detection
+- `MergeConflictError` - Type conflicts in merging
+- `SecurityViolationError` - Security policy violations
+- `SchemaValidationError` - JSON Schema validation failures
 
 ## Development Notes
 
-- The project uses modern packaging with `pyproject.toml` (PEP 517/518)
-- PyYAML 5.1+ as core dependency
-- Python 3.7+ required for pathlib and f-string support
-- All custom constructors receive a `loader` and `node` parameter
-- Base paths are resolved relative to the main YAML file's directory
-- Template paths can be set via `SMARTYAML_TMPL` environment variable
-- Error handling provides detailed context through custom exception classes
-- Comprehensive type hints with `py.typed` marker
+- **Modern Architecture**: Modular design with clear separation of concerns
+- **Type Safety**: Comprehensive type hints throughout codebase
+- **Error Context**: Standardized error reporting with file/field context
+- **Configuration**: Fluent configuration builder with validation
+- **Performance**: Optimized recursive processing with caching support
+- **Security First**: Multiple layers of security controls
+- **Extensibility**: Plugin system for custom directives (future)
 
-## Important File Locations
+### Important File Locations
 
-- Core API: `smartyaml/__init__.py` (load function)
-- Loader setup: `smartyaml/loader.py` (constructor registration)
-- Package config: `pyproject.toml` (modern packaging configuration)
-- Type definitions: `smartyaml/type_annotations.py`
-- Testing utilities: `smartyaml/testing_utils.py`
-- Performance optimizations: `smartyaml/performance_optimizations.py`
-- Registry system: `smartyaml/registry.py`
-- Error context: `smartyaml/error_context.py`
+**Core Files:**
+- Main API: `smartyaml/__init__.py`
+- Configuration: `smartyaml/config/main.py` (SmartYAMLConfig)
+- Processor: `smartyaml/pipeline/processor.py` (main orchestrator)
+- Package config: `pyproject.toml`
+
+**Pipeline Components:**
+- Parser: `smartyaml/pipeline/parser.py` (SmartYAMLLoader)
+- Directives: `smartyaml/pipeline/directives.py` (DirectiveProcessor)  
+- Variables: `smartyaml/pipeline/variables.py` (VariableProcessor)
+- Templates: `smartyaml/pipeline/templates.py` (TemplateProcessor)
+
+**Support Systems:**
+- Error handling: `smartyaml/errors/` (context, helpers)
+- Utilities: `smartyaml/utils/` (merge, validation, recursion)
+- Configuration: `smartyaml/config/` (modular config system)
 
 ## Build and Quality Assurance
 
 Always run these commands before committing:
-1. `python -m pytest` - Ensure all tests pass
-2. `black smartyaml/` - Format code
-3. `isort smartyaml/` - Sort imports
-4. `flake8 smartyaml/` - Lint code
-5. `mypy smartyaml/` - Type check
+1. `python -m pytest` - Ensure all tests pass (230+ tests)
+2. `black smartyaml/` - Format code with Black
+3. `isort smartyaml/` - Sort imports with isort  
+4. `flake8 smartyaml/` - Lint code with flake8
+5. `mypy smartyaml/` - Type check with mypy
 6. `python -m build` - Verify package builds cleanly
+
+## Implementation Standards
+
+- **Follow SPECS-v1.md**: Complete specification compliance
+- **Modern Python**: Use type hints, pathlib, f-strings (Python 3.7+)
+- **Code Quality**: Black formatting, isort imports, flake8 linting, mypy typing
+- **Testing**: Maintain 230+ passing tests, add tests for new features
+- **Security**: Security-first approach with multiple validation layers
+- **Error Handling**: Use standardized error context system
+- **Documentation**: Comprehensive docstrings and type hints
+
+## Package Configuration
+
+- **Package Name**: `pysmartyaml` (PyPI availability)
+- **Python Support**: 3.9+ (due to advanced type hints)
+- **Dependencies**: PyYAML 5.1+, minimal external dependencies
+- **Build System**: Modern `pyproject.toml` configuration
+- **Testing**: pytest with coverage, xdist for parallel execution

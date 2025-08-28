@@ -1,0 +1,50 @@
+# Typed Environment Variables Example
+# Demonstrates type conversion with environment variables
+
+__version: "1.0.0"
+
+# Integer environment variables
+server:
+  port: !env_int ['PORT', 8080]
+  worker_processes: !env_int ['WORKERS', 4]
+  max_connections: !env_int ['MAX_CONNECTIONS', 1000]
+  request_timeout: !env_int ['REQUEST_TIMEOUT', 30]
+
+# Float environment variables
+performance:
+  cpu_limit: !env_float ['CPU_LIMIT', 1.0]
+  memory_limit_gb: !env_float ['MEMORY_LIMIT_GB', 2.0]
+  cache_hit_ratio: !env_float ['CACHE_HIT_RATIO', 0.85]
+  response_time_threshold: !env_float ['RESPONSE_TIME_THRESHOLD', 0.5]
+
+# Boolean environment variables
+features:
+  debug_mode: !env_bool ['DEBUG', false]
+  ssl_enabled: !env_bool ['SSL_ENABLED', true]
+  metrics_enabled: !env_bool ['METRICS_ENABLED', true]
+  profiling_enabled: !env_bool ['PROFILING_ENABLED', false]
+  auto_scaling: !env_bool ['AUTO_SCALING', true]
+
+# Database connection with typed values
+database:
+  host: !env ['DB_HOST', 'localhost']
+  port: !env_int ['DB_PORT', 5432]
+  pool_size: !env_int ['DB_POOL_SIZE', 20]
+  pool_timeout: !env_float ['DB_POOL_TIMEOUT', 30.0]
+  ssl_required: !env_bool ['DB_SSL_REQUIRED', false]
+  connection_retries: !env_int ['DB_CONNECTION_RETRIES', 3]
+
+# Monitoring configuration
+monitoring:
+  enabled: !env_bool ['MONITORING_ENABLED', true]
+  port: !env_int ['MONITORING_PORT', 9090]
+  scrape_interval: !env_int ['SCRAPE_INTERVAL', 15]
+  retention_days: !env_int ['RETENTION_DAYS', 30]
+  alert_threshold: !env_float ['ALERT_THRESHOLD', 0.95]
+
+# Rate limiting
+rate_limits:
+  enabled: !env_bool ['RATE_LIMIT_ENABLED', true]
+  requests_per_second: !env_int ['RATE_LIMIT_RPS', 100]
+  burst_size: !env_int ['RATE_LIMIT_BURST', 200]
+  window_size_minutes: !env_int ['RATE_LIMIT_WINDOW', 1]

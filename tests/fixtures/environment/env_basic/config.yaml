@@ -1,0 +1,10 @@
+description: "Basic environment variable usage with typed conversions"
+
+env_vars:
+  APP_NAME: "MyApp"
+  PORT: "8080"
+  DEBUG: "true"
+  TIMEOUT: "45.5"
+  DB_HOST: "db.example.com"
+  DB_USER: "myuser"
+  # DB_PASSWORD is intentionally not set to test default values

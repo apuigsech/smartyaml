@@ -1,0 +1,5 @@
+
+description: "Arbitrary file system access should be blocked and raise SecurityViolationError"
+environment: {}
+
+  security:

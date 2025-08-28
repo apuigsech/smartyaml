@@ -1,0 +1,36 @@
+# Database Configuration
+# This file will be processed by SmartYAML when included
+
+__version: "1.0.0"
+
+__vars:
+  db_host: !env ['DB_HOST', 'localhost']
+  db_port: !env_int ['DB_PORT', 5432]
+  db_name: !env ['DB_NAME', 'myapp_db']
+
+# Database connection settings
+connection:
+  host: !expand "{{db_host}}"
+  port: !expand "{{db_port}}"
+  database: !expand "{{db_name}}"
+  username: !env ['DB_USER', 'postgres']
+  password: !secret ['DB_PASSWORD', 'defaultpass']
+
+# Connection pool settings
+pool:
+  size: !env_int ['DB_POOL_SIZE', 20]
+  max_overflow: 10
+  timeout: !env_int ['DB_TIMEOUT', 30]
+  recycle: 3600
+
+# Database features
+features:
+  ssl_mode: !env ['DB_SSL_MODE', 'prefer']
+  auto_vacuum: !env_bool ['DB_AUTO_VACUUM', true]
+  log_statement: !env ['DB_LOG_STATEMENT', 'none']
+
+# Backup configuration
+backup:
+  enabled: !env_bool ['DB_BACKUP_ENABLED', false]
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention_days: !env_int ['DB_BACKUP_RETENTION', 7]

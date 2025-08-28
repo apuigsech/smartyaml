@@ -1,0 +1,9 @@
+__template:
+  use: 'environments.production'
+  overlay: true
+
+database:
+  ssl_mode: "require"  # Override template setting
+  
+monitoring:
+  enabled: true  # Add new section

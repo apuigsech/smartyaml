@@ -1,0 +1,5 @@
+config:
+  name: "MyApp"
+  version: "1.0.0"
+  env: "production"
+  description: "Application MyApp v1.0.0 in production"

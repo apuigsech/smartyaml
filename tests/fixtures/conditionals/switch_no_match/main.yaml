@@ -1,0 +1,5 @@
+result: !switch
+  var: 'MODE'
+  cases:
+    - case: 'option1'
+      value: 'first'

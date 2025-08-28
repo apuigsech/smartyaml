@@ -1,0 +1,1 @@
+result: !env_float ['INVALID_FLOAT', 3.14]

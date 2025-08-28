@@ -1,0 +1,4 @@
+service:
+  type: 'web'       # From template variable
+  port: 3000        # Overridden variable
+  name: 'MyApp'     # From main variable

@@ -1,0 +1,7 @@
+config:
+  existing: exists
+  missing_str: default_string
+  missing_int: 42
+  missing_float: 3.14
+  missing_bool: true
+  missing_null: null

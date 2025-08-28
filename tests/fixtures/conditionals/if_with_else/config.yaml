@@ -1,0 +1,6 @@
+description: "Test !if directive with else clause for true/false conditions"
+env_vars:
+  FEATURE_ENABLED: "true"
+  # USE_POSTGRES is intentionally not set (false)
+  DEBUG_MODE: "yes"
+  ENVIRONMENT: "1"

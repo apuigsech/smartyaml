@@ -1,0 +1,40 @@
+# External Service Configuration
+# This file will be included as raw YAML without SmartYAML processing
+
+# Note: This configuration contains SmartYAML directives that will NOT be processed
+# when included with !include_yaml
+
+api_endpoint: "https://external-api.example.com"
+api_version: "v2"
+
+# These directives will remain as-is and not be processed
+database_url: !env ['EXTERNAL_DB_URL', 'postgresql://localhost/external']
+timeout: !env_int ['EXTERNAL_TIMEOUT', 30]
+
+authentication:
+  type: "oauth2"
+  client_id: "external-client-id"
+  # This secret directive will remain unprocessed
+  client_secret: !secret ['EXTERNAL_CLIENT_SECRET', 'fallback-secret']
+
+rate_limits:
+  requests_per_minute: 1000
+  burst_limit: 100
+
+# Feature flags - these will remain as directives
+features:
+  advanced_features: !env_bool ['EXTERNAL_ADVANCED', false]
+  beta_features: !env_bool ['EXTERNAL_BETA', false]
+
+# Endpoints configuration
+endpoints:
+  users: "/api/v2/users"
+  orders: "/api/v2/orders"
+  products: "/api/v2/products"
+  search: "/api/v2/search"
+
+# Headers to include in requests
+headers:
+  user_agent: "MyApp/1.0"
+  accept: "application/json"
+  content_type: "application/json"

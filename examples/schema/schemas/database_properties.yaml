@@ -1,0 +1,31 @@
+# Database-specific properties
+database:
+  type: object
+  properties:
+    type:
+      type: string
+      enum: ["postgresql", "mysql", "sqlite", "mongodb"]
+    host:
+      type: string
+      format: hostname
+    port:
+      type: integer
+      minimum: 1
+      maximum: 65535
+    name:
+      type: string
+      minLength: 1
+      maxLength: 64
+    ssl:
+      type: boolean
+    pool_size:
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 10
+    timeout:
+      type: number
+      minimum: 0.1
+      maximum: 300.0
+      default: 30.0
+  required: [type, host, port, name]

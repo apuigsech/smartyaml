@@ -1,0 +1,48 @@
+# Microservice Template
+# Common configuration for microservice applications
+
+__version: "1.0.0"
+
+__vars:
+  default_memory: "512Mi"
+  default_cpu: "500m"
+  default_replicas: 2
+
+service:
+  type: "microservice"
+  port: 8080
+  deployment:
+    replicas: !expand "{{default_replicas}}"
+    resources:
+      memory: !expand "{{default_memory}}"
+      cpu: !expand "{{default_cpu}}"
+    rolling_update:
+      max_surge: 1
+      max_unavailable: 0
+
+health_checks:
+  liveness:
+    path: "/health/live"
+    initial_delay: 30
+    period: 10
+  readiness:
+    path: "/health/ready"
+    initial_delay: 5
+    period: 5
+
+observability:
+  logging:
+    level: "INFO"
+    structured: true
+  metrics:
+    enabled: true
+    prometheus: true
+  tracing:
+    enabled: true
+    jaeger: true
+
+networking:
+  service_mesh: true
+  ingress:
+    enabled: true
+    tls: true

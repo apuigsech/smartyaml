@@ -1,0 +1,5 @@
+description: "Template with variable inheritance using use: format - main file variables override template variables"
+environment: {}
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_use_with_vars/templates"
+  base_path: "."

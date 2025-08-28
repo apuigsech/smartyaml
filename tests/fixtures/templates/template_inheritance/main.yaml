@@ -1,0 +1,6 @@
+__template:
+  path: 'base.yaml'
+
+app:
+  name: "MyApp"  # Override base value
+  environment: "production"  # Add new value

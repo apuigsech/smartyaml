@@ -1,0 +1,6 @@
+app:
+  name: 'MyApp'        # Overridden
+  version: '1.0'       # Inherited
+  environment: 'production'  # Added
+database:
+  host: 'localhost'     # Inherited

@@ -1,0 +1,4 @@
+# Base JSON Schema structure
+type: object
+properties: {}
+required: []

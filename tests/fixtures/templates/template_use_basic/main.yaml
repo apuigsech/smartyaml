@@ -1,0 +1,6 @@
+__template:
+  use: 'database.config'
+
+database:
+  host: "production.db.example.com"  # Override template value
+  timeout: 60  # Add new setting

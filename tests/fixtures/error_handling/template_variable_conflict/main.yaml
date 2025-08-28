@@ -1,0 +1,6 @@
+# Error: template with conflicting variable definitions
+__template:
+  path: 'conflict_template.yaml'
+__vars:
+  shared_var: "main_value"  # This conflicts with template's shared_var
+data: "{{shared_var}}"

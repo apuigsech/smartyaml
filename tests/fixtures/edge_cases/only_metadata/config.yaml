@@ -1,0 +1,1 @@
+description: "Edge case: YAML with only metadata fields should result in empty output"

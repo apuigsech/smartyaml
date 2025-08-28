@@ -1,0 +1,3 @@
+result: !if ['MISSING_ENV_VAR', 'should_not_show']
+
+other_result: !if ['ANOTHER_MISSING', {'complex': 'object'}]

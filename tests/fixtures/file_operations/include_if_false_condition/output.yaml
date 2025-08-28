@@ -1,0 +1,5 @@
+app:
+  name: "MyApp"
+  version: "1.0"
+optional_config: null
+database_config: null

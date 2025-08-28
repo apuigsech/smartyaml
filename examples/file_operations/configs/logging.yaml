@@ -1,0 +1,78 @@
+# Logging Configuration
+# Advanced logging setup with environment-based configuration
+
+__version: "1.0.0"
+
+__vars:
+  log_level: !env ['LOG_LEVEL', 'INFO']
+  log_format: !env ['LOG_FORMAT', 'json']
+  log_dir: !env ['LOG_DIR', '/var/log/app']
+
+# Root logger configuration
+root:
+  level: !expand "{{log_level}}"
+
+# Formatters
+formatters:
+  json:
+    format: '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}'
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+
+  human:
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+# Handlers based on environment
+handlers: !switch ['LOG_ENVIRONMENT']
+  - case: 'production'
+    file:
+      class: "logging.handlers.RotatingFileHandler"
+      filename: !expand "{{log_dir}}/app.log"
+      maxBytes: 10485760  # 10MB
+      backupCount: 5
+      formatter: "json"
+      level: "INFO"
+
+    error_file:
+      class: "logging.handlers.RotatingFileHandler"
+      filename: !expand "{{log_dir}}/error.log"
+      maxBytes: 10485760
+      backupCount: 5
+      formatter: "json"
+      level: "ERROR"
+
+  - case: 'development'
+    console:
+      class: "logging.StreamHandler"
+      stream: "ext://sys.stdout"
+      formatter: "human"
+      level: "DEBUG"
+
+    file:
+      class: "logging.FileHandler"
+      filename: !expand "{{log_dir}}/debug.log"
+      formatter: "human"
+      level: "DEBUG"
+
+  - default: 'basic'
+    console:
+      class: "logging.StreamHandler"
+      formatter: !expand "{{log_format}}"
+      level: !expand "{{log_level}}"
+
+# Logger configuration for specific modules
+loggers:
+  app:
+    level: !expand "{{log_level}}"
+    propagate: false
+    handlers: ["file", "console"]
+
+  database:
+    level: !env ['DB_LOG_LEVEL', 'WARN']
+    propagate: false
+    handlers: ["file"]
+
+  api:
+    level: "INFO"
+    propagate: false
+    handlers: ["file", "console"]

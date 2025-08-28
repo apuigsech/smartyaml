@@ -1,0 +1,7 @@
+__template:
+  path: 'template.yaml'
+  overlay: true
+
+settings:
+  debug: true  # Override
+  timeout: 30  # Add new

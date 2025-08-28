@@ -1,0 +1,7 @@
+description: "Security: env directives should be blocked in sandbox mode"
+
+env_vars:
+  TEST_VAR: "value"
+
+
+

@@ -1,0 +1,45 @@
+# Basic File Inclusion Example
+# Demonstrates including external files with !include
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "file-inclusion-demo"
+  environment: "development"
+
+# Main application configuration
+application:
+  name: !expand "{{app_name}}"
+  environment: !expand "{{environment}}"
+
+  # Include database configuration from external file
+  database: !include 'file_operations/configs/database.yaml'
+
+  # Include logging configuration
+  logging: !include 'file_operations/configs/logging.yaml'
+
+# Include API documentation as string content
+api_documentation: !include 'file_operations/data/api_guide.md'
+
+# Include SQL queries as strings
+queries:
+  get_users: !include 'file_operations/sql/get_users.sql'
+  create_user: !include 'file_operations/sql/create_user.sql'
+  update_user: !include 'file_operations/sql/update_user.sql'
+
+# Include raw configuration data without processing
+external_config: !include_yaml 'file_operations/configs/external_service.yaml'
+
+# Static configuration that doesn't require inclusion
+server:
+  host: "0.0.0.0"
+  port: 8080
+  workers: 4
+
+# Security configuration
+security:
+  # Include SSL certificates (as strings)
+  ssl_cert: !include 'file_operations/data/ssl_cert.pem'
+
+  # Include allowed origins from external file
+  cors: !include 'file_operations/configs/cors_config.yaml'

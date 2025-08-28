@@ -1,0 +1,4 @@
+__schema: !include 'common_schema.json'
+
+name: "IncludeApp"
+version: "2.0.0"

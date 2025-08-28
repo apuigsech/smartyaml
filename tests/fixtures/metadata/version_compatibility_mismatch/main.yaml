@@ -1,0 +1,4 @@
+__version: "99.99.99"
+
+config:
+  name: "This should never be processed"

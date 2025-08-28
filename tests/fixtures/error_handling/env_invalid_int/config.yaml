@@ -1,0 +1,6 @@
+description: "Error case: !env_int with invalid integer value should raise DirectiveProcessingError"
+
+env_vars:
+  INVALID_INT: "not_a_number"
+
+expected_error: "DirectiveProcessingError"

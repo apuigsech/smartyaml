@@ -1,0 +1,4 @@
+__version: "99.99.99"  # Much higher than current version
+
+config:
+  data: "should_not_process"

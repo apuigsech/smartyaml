@@ -1,0 +1,3 @@
+expected_error: "SmartYAMLError"
+description: "Unknown directives should raise SmartYAMLError with constructor information"
+environment: {}

@@ -1,0 +1,2 @@
+# Security: attempt to include a very large file
+large_data: !include 'huge_file.yaml'

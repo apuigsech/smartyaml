@@ -1,0 +1,25 @@
+__vars:
+  app_name: "IntegrationApp"
+
+database: !switch
+  var: 'DATABASE_TYPE'
+  cases:
+    - case: 'postgresql'
+      driver: 'postgresql+psycopg2'
+      port: !env_int ['DB_PORT', 5432]
+      host: !env ['DB_HOST', 'localhost']
+    - case: 'mysql'
+      driver: 'mysql+pymysql'
+      port: !env_int ['DB_PORT', 3306]
+      host: !env ['DB_HOST', 'localhost']
+    - default: 'sqlite'
+      driver: 'sqlite3'
+      file: !expand "{{app_name}}.db"
+
+config: !merge
+  - app:
+      name: "{{app_name}}"
+      environment: !env ['APP_ENV', 'development']
+  - features: !concat
+      - ["logging"]
+      - !if ['ENABLE_FEATURES', ["monitoring", "metrics"]]

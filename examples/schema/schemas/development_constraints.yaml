@@ -1,0 +1,16 @@
+# Development environment constraints
+properties:
+  app:
+    properties:
+      port:
+        minimum: 3000
+        maximum: 9999  # Allow wider port range in dev
+      debug:
+        type: boolean
+        default: true
+  database:
+    properties:
+      host:
+        enum: ["localhost", "127.0.0.1", "dev-db"]  # Restrict to dev hosts
+      ssl:
+        default: false  # SSL not required in dev

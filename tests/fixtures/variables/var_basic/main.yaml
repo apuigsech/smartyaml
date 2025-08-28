@@ -1,0 +1,16 @@
+__version: "1.0.0"
+
+__vars:
+  app_name: "my-app"
+  port: 8080
+  enabled: true
+  rate_limit: 100.5
+  missing_var: null
+
+# Test basic variable resolution with type preservation
+service:
+  name: !var "app_name"           # string
+  port: !var "port"               # integer
+  enabled: !var "enabled"         # boolean
+  rate_limit: !var "rate_limit"   # float
+  nullable: !var "missing_var"    # null

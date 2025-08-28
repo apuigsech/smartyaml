@@ -1,0 +1,4 @@
+messages:
+  defined: "This works: I exist"
+  undefined: "This should remain: {{undefined_var}}"
+  mixed: "Mixed: I exist and {{missing_var}}"

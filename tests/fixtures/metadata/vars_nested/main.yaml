@@ -1,0 +1,17 @@
+__vars:
+  app:
+    name: "NestedApp"
+    config:
+      debug: true
+      port: 3000
+  database:
+    host: "localhost"
+    credentials:
+      user: "admin"
+
+config:
+  app_name: "{{app.name}}"
+  debug_mode: "{{app.config.debug}}"
+  port: "{{app.config.port}}"
+  db_host: "{{database.host}}"
+  db_user: "{{database.credentials.user}}"

@@ -1,0 +1,6 @@
+description: "Error case: !env_float with invalid float value should raise DirectiveProcessingError"
+
+env_vars:
+  INVALID_FLOAT: "not_a_float"
+
+expected_error: "DirectiveProcessingError"

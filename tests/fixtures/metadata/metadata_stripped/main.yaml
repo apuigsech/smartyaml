@@ -1,0 +1,8 @@
+__version: "1.0.0"
+__vars:
+  test_var: "test_value"
+__schema: "some_schema.json"
+
+actual_config:
+  name: "{{test_var}}"
+  port: 8080

@@ -1,0 +1,161 @@
+# Data Merging Examples
+# Demonstrates the !merge directive for combining configurations
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "merge-demo"
+  environment: "development"
+  region: "us-east-1"
+
+# Basic merge example - combining multiple objects
+basic_merge: !merge
+  - name: !expand "{{app_name}}"
+    type: "web-service"
+  - environment: !expand "{{environment}}"
+    region: !expand "{{region}}"
+  - version: "1.0.0"
+    debug: true
+
+# Merge with file inclusion
+database_config: !merge
+  - !include 'file_operations/configs/database.yaml'
+  - # Override specific settings
+    connection:
+      pool_size: 50
+      timeout: 60
+    features:
+      monitoring: true
+      slow_query_log: true
+
+# Merge with conditional configuration
+api_config: !merge
+  - # Base configuration
+    host: "0.0.0.0"
+    port: 8080
+    timeout: 30
+  - # Environment-specific overrides
+    !switch ['ENVIRONMENT']
+      - case: 'production'
+        host: "api.example.com"
+        port: 443
+        ssl: true
+        rate_limit: 10000
+      - case: 'staging'
+        host: "staging-api.example.com"
+        port: 443
+        ssl: true
+        rate_limit: 1000
+      - default: 'development'
+        debug: true
+        rate_limit: 100
+  - # Feature flags
+    features: !merge
+      - cors: !env_bool ['ENABLE_CORS', true]
+        compression: !env_bool ['ENABLE_COMPRESSION', true]
+      - !if ['ENABLE_METRICS']
+        metrics: true
+        prometheus: true
+
+# Complex nested merge with arrays and objects
+service_config: !merge
+  - # Base service configuration
+    name: !expand "{{app_name}}"
+    type: "microservice"
+    resources:
+      cpu: "500m"
+      memory: "512Mi"
+    labels:
+      app: !expand "{{app_name}}"
+      version: "1.0.0"
+
+  - # Environment-specific resources
+    !switch ['ENVIRONMENT']
+      - case: 'production'
+        resources:
+          cpu: "1000m"
+          memory: "1Gi"
+        replicas: 3
+        labels:
+          tier: "production"
+      - case: 'staging'
+        resources:
+          cpu: "750m"
+          memory: "768Mi"
+        replicas: 2
+        labels:
+          tier: "staging"
+      - default: 'development'
+        replicas: 1
+        labels:
+          tier: "development"
+
+  - # Additional configuration
+    monitoring:
+      enabled: true
+      metrics_port: 9090
+    health_checks:
+      liveness: "/health/live"
+      readiness: "/health/ready"
+
+# Merge with template usage
+deployment: !merge
+  - !template 'services.microservice'
+  - # Override template defaults
+    service:
+      name: !expand "{{app_name}}"
+      port: 3000
+    deployment:
+      replicas: !env_int ['REPLICAS', 2]
+      strategy: "RollingUpdate"
+
+# Merge arrays and objects together
+complete_config: !merge
+  - # Application metadata
+    application:
+      name: !expand "{{app_name}}"
+      version: "1.0.0"
+      description: "Data operations demonstration"
+
+  - # Database configuration from file
+    database: !include 'file_operations/configs/database.yaml'
+
+  - # Logging configuration from file
+    logging: !include 'file_operations/configs/logging.yaml'
+
+  - # Environment-specific overrides
+    overrides: !switch ['DEPLOYMENT_TYPE']
+      - case: 'kubernetes'
+        platform: "k8s"
+        ingress:
+          enabled: true
+          tls: true
+        service_mesh: true
+      - case: 'docker'
+        platform: "docker"
+        networks:
+          - "app-network"
+        volumes:
+          - "/data:/app/data"
+      - default: 'standalone'
+        platform: "host"
+        pid_file: "/var/run/app.pid"
+
+# Merge with conditional includes
+feature_config: !merge
+  - # Base features
+    features:
+      authentication: true
+      logging: true
+
+  - # Conditional feature additions
+    additional_features:
+      caching: !include_if ['ENABLE_CACHING', 'file_operations/configs/redis_config.yaml']
+      monitoring: !include_if ['ENABLE_MONITORING', 'file_operations/configs/monitoring_config.yaml']
+      analytics: !include_if ['ENABLE_ANALYTICS', 'file_operations/configs/analytics_config.yaml']
+
+  - # Runtime configuration
+    runtime:
+      environment: !expand "{{environment}}"
+      debug: !env_bool ['DEBUG', false]
+      workers: !env_int ['WORKERS', 4]

@@ -1,0 +1,6 @@
+description: "Error case: !env_bool with invalid boolean value should raise DirectiveProcessingError"
+
+env_vars:
+  INVALID_BOOL: "maybe"
+
+expected_error: "DirectiveProcessingError"

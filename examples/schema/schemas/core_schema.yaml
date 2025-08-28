@@ -1,0 +1,29 @@
+# Core schema - common to all environments
+type: object
+properties:
+  app:
+    type: object
+    properties:
+      name:
+        type: string
+        minLength: 3
+        maxLength: 50
+      version:
+        type: string
+        pattern: "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+)?$"
+    required: [name, version]
+  database:
+    type: object
+    properties:
+      host:
+        type: string
+        minLength: 1
+      port:
+        type: integer
+        minimum: 1
+        maximum: 65535
+      name:
+        type: string
+        minLength: 1
+    required: [host, port, name]
+required: [app, database]

@@ -1,0 +1,301 @@
+# SmartYAML Test Fixtures Index
+#
+# This file defines all available test fixtures for the fixture-based testing platform.
+# Each fixture should have:
+#   - name: Unique identifier within the category
+#   - path: Relative path from tests/fixtures/ to fixture directory
+#   - description: Human-readable description of what the fixture tests
+#
+# Each fixture directory should contain:
+#   - main.yaml: Input YAML to be processed by SmartYAML
+#   - output.yaml: Expected result after processing
+#   - config.yaml: (Optional) Environment variables and SmartYAML configuration
+
+fixtures:
+  # Conditional directive tests
+  conditionals:
+    - name: "switch_basic"
+      path: "conditionals/switch_basic"
+      description: "Basic switch directive with environment variable (flattened format)"
+    
+    - name: "switch_with_default"
+      path: "conditionals/switch_with_default"
+      description: "Switch directive with default case fallback (flattened format)"
+    
+    - name: "switch_array_format"
+      path: "conditionals/switch_array_format"
+      description: "Switch directive using array format to test compatibility"
+    
+    - name: "switch_single_value"
+      path: "conditionals/switch_single_value"
+      description: "Switch directive returning single value when only one key-value pair remains"
+    
+    - name: "switch_no_match"
+      path: "conditionals/switch_no_match"
+      description: "Switch directive with no matching case and no default (returns null)"
+
+  # Environment variable tests
+  environment:
+    - name: "env_basic"
+      path: "environment/env_basic"
+      description: "Basic environment variable usage with !env directive"
+    
+    - name: "env_typed"
+      path: "environment/env_typed"
+      description: "Typed environment variables (!env_int, !env_bool, !env_float)"
+
+  # Template tests
+  templates:
+    - name: "template_inheritance"
+      path: "templates/template_inheritance"
+      description: "Basic template inheritance with overlay mode"
+    
+    - name: "template_overlay_mode"
+      path: "templates/template_overlay_mode"
+      description: "Template overlay mode behavior - main content overlays on top of template"
+    
+    - name: "template_with_variables"
+      path: "templates/template_with_variables"
+      description: "Template inheritance with variables - main variables override template variables"
+    
+    - name: "template_use_basic"
+      path: "templates/template_use_basic"
+      description: "Basic template usage with use: format - loads from templates directory"
+    
+    - name: "template_use_nested"
+      path: "templates/template_use_nested"
+      description: "Nested template usage with use: format - loads from nested templates directory structure"
+    
+    - name: "template_use_overlay"
+      path: "templates/template_use_overlay"
+      description: "Template with overlay mode using use: format - merges template content with main content"
+    
+    - name: "template_use_with_vars"
+      path: "templates/template_use_with_vars"
+      description: "Template with variable inheritance using use: format - main file variables override template variables"
+    
+    - name: "template_nested_inheritance"
+      path: "templates/template_nested_inheritance"
+      description: "Nested template inheritance - template that loads a template that loads another template (3-level inheritance chain)"
+
+  # Data operation tests
+  data_operations:
+    - name: "merge_simple"
+      path: "data_operations/merge_simple"
+      description: "Simple merge directive combining two dictionaries"
+    
+    - name: "concat_arrays"
+      path: "data_operations/concat_arrays"
+      description: "Concat directive combining multiple arrays into one"
+
+  # Variable expansion tests
+  variables:
+    - name: "basic_expansion"
+      path: "variables/basic_expansion"
+      description: "Basic variable expansion using __vars and {{variable}} syntax"
+    
+    - name: "expand_basic"
+      path: "variables/expand_basic"
+      description: "Basic !expand directive functionality"
+    
+    - name: "expand_in_directive_args"
+      path: "variables/expand_in_directive_args"
+      description: "!expand directive working within other directive arguments"
+    
+    - name: "expand_missing_vars"
+      path: "variables/expand_missing_vars"
+      description: "!expand directive handling missing variables gracefully"
+    
+    - name: "expand_nested_vars"
+      path: "variables/expand_nested_vars"
+      description: "!expand directive with nested variable references"
+    
+    - name: "expand_with_defaults"
+      path: "variables/expand_with_defaults"
+      description: "!expand directive with default values for missing variables"
+
+  # Integration tests (multiple directives)
+  integration:
+    - name: "switch_env_merge"
+      path: "integration/switch_env_merge"
+      description: "Integration test combining switch, env, merge, concat, if, and expand directives"
+
+  # File operation tests
+  file_operations:
+    - name: "include_basic"
+      path: "file_operations/include_basic"
+      description: "Basic include directive to include external YAML file"
+    
+    - name: "include_if_true"
+      path: "file_operations/include_if_true"
+      description: "!include_if directive with true condition - should include the file"
+    
+    - name: "include_if_false"
+      path: "file_operations/include_if_false"
+      description: "!include_if directive with false condition - should return null"
+    
+    - name: "include_yaml_basic"
+      path: "file_operations/include_yaml_basic"
+      description: "!include_yaml loads raw YAML without processing directives vs !include which processes them"
+
+  # Error handling tests
+  error_handling:
+    - name: "env_invalid_int"
+      path: "error_handling/env_invalid_int"
+      description: "Error case: !env_int with invalid integer value should raise DirectiveProcessingError"
+    
+    - name: "env_invalid_float"
+      path: "error_handling/env_invalid_float"
+      description: "Error case: !env_float with invalid float value should raise DirectiveProcessingError"
+    
+    - name: "env_invalid_bool"
+      path: "error_handling/env_invalid_bool"
+      description: "Error case: !env_bool with invalid boolean value should raise DirectiveProcessingError"
+    
+    - name: "switch_missing_args"
+      path: "error_handling/switch_missing_args"
+      description: "Error case: !switch with missing arguments should raise DirectiveSyntaxError"
+    
+    - name: "include_file_not_found"
+      path: "error_handling/include_file_not_found"
+      description: "Error case: !include with nonexistent file should raise FileNotFoundError"
+    
+    - name: "template_file_not_found"
+      path: "error_handling/template_file_not_found"
+      description: "Error case: __template with nonexistent file should raise FileNotFoundError"
+    
+    - name: "circular_reference"
+      path: "error_handling/circular_reference"
+      description: "Circular variable references should raise CircularReferenceError"
+    
+    - name: "invalid_yaml_syntax"
+      path: "error_handling/invalid_yaml_syntax"
+      description: "Invalid YAML syntax should raise YAMLError or ParserError"
+    
+    - name: "merge_type_conflict"
+      path: "error_handling/merge_type_conflict"
+      description: "Merging incompatible types should raise DirectiveProcessingError or TypeError"
+    
+    - name: "concat_type_mismatch"
+      path: "error_handling/concat_type_mismatch"
+      description: "Concatenating incompatible types should raise DirectiveProcessingError or TypeError"
+    
+    - name: "invalid_directive_syntax"
+      path: "error_handling/invalid_directive_syntax"
+      description: "Invalid directive syntax should raise DirectiveSyntaxError"
+    
+    - name: "template_variable_conflict"
+      path: "error_handling/template_variable_conflict"
+      description: "Template variable conflicts should raise VariableConflictError (if strict mode) or resolve with main file precedence"
+    
+    - name: "unknown_directive"
+      path: "error_handling/unknown_directive"
+      description: "Unknown directives should raise UnknownDirectiveError or ConstructorError"
+
+  # Metadata processing tests
+  metadata:
+    - name: "metadata_stripped"
+      path: "metadata/metadata_stripped"
+      description: "Metadata fields (__*) should be stripped from output and variables processed"
+    
+    - name: "vars_nested"
+      path: "metadata/vars_nested"
+      description: "Nested variable access using dot notation (obj.property.subproperty)"
+    
+    - name: "version_compatibility_match"
+      path: "metadata/version_compatibility_match"
+      description: "__version matches current library version - should process without error"
+    
+    - name: "version_compatibility_mismatch"
+      path: "metadata/version_compatibility_mismatch"
+      description: "__version higher than library version should raise VersionMismatchError"
+    
+    - name: "version_missing"
+      path: "metadata/version_missing"
+      description: "Missing __version should assume compatibility and process normally"
+    
+    - name: "version_invalid_format"
+      path: "metadata/version_invalid_format"
+      description: "Invalid __version format should raise VersionMismatchError or DirectiveSyntaxError"
+    
+    - name: "schema_validation_success"
+      path: "metadata/schema_validation_success"
+      description: "Successful schema validation - data matches JSON Schema requirements"
+    
+    - name: "schema_validation_success_complex"
+      path: "metadata/schema_validation_failure"
+      description: "Schema validation success with required fields - metadata field should be stripped and data should pass validation"
+    
+    - name: "schema_with_include"
+      path: "metadata/schema_with_include"
+      description: "__schema using !include directive to load external JSON Schema file"
+    
+    - name: "schema_missing"
+      path: "metadata/schema_missing"
+      description: "Missing __schema should skip validation gracefully and process normally"
+    
+    - name: "schema_complex_types"
+      path: "metadata/schema_complex_types"
+      description: "Complex schema validation with arrays, nested objects, enums, patterns, and required fields"
+    
+    - name: "if_basic"
+      path: "conditionals/if_basic"
+      description: "Basic !if directive with environment variable conditions"
+    
+    - name: "if_complex_value"
+      path: "conditionals/if_complex_value"
+      description: "!if directive with complex nested value structure"
+    
+    - name: "if_nested"
+      path: "conditionals/if_nested"
+      description: "!if directive with nested conditional logic"
+
+  # Security tests
+  security:
+    - name: "sandbox_env_blocked"
+      path: "security/sandbox_env_blocked"
+      description: "Security: env directives should be blocked in sandbox mode"
+    
+    - name: "forbidden_env_vars"
+      path: "security/forbidden_env_vars"
+      description: "Security: forbidden environment variables should raise SecurityViolationError"
+    
+    - name: "path_traversal_attempt"
+      path: "security/path_traversal_attempt"
+      description: "Path traversal attempt should be blocked and raise SecurityViolationError"
+    
+    - name: "arbitrary_file_access"
+      path: "security/arbitrary_file_access"
+      description: "Arbitrary file system access should be blocked and raise SecurityViolationError"
+    
+    - name: "forbidden_env_access"
+      path: "security/forbidden_env_access"
+      description: "Access to forbidden environment variables should raise SecurityViolationError"
+    
+    - name: "file_size_limit_exceeded"
+      path: "security/file_size_limit_exceeded"
+      description: "File size exceeding security limits should raise SecurityViolationError"
+    
+    - name: "recursion_depth_exceeded"
+      path: "security/recursion_depth_exceeded"
+      description: "Recursion depth exceeding security limits should raise RecursionError or SecurityViolationError"
+
+  # Pipeline processing tests
+  pipeline:
+    - name: "processing_order"
+      path: "pipeline/processing_order"
+      description: "Pipeline processing order: template loading -> variable resolution -> directive processing"
+
+  # Edge case tests
+  edge_cases:
+    - name: "only_metadata"
+      path: "edge_cases/only_metadata"
+      description: "Edge case: YAML with only metadata fields should result in empty output"
+    
+    - name: "undefined_variables"
+      path: "edge_cases/undefined_variables"
+      description: "Edge case: undefined variables should remain as literal strings"
+    
+    - name: "deeply_nested_vars"
+      path: "edge_cases/deeply_nested_vars"
+      description: "Edge case: deeply nested variable access (6+ levels deep)"

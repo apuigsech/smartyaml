@@ -1,0 +1,38 @@
+# PostgreSQL Database Configuration Template
+
+__version: "1.0.0"
+
+__vars:
+  default_port: 5432
+  default_pool_size: 20
+  default_timeout: 30
+
+type: "postgresql"
+driver: "postgresql+psycopg2"
+port: !expand "{{default_port}}"
+host: "localhost"
+
+connection:
+  pool_size: !expand "{{default_pool_size}}"
+  max_overflow: 10
+  pool_timeout: !expand "{{default_timeout}}"
+  pool_recycle: 3600
+  echo: false
+
+ssl:
+  enabled: false
+  mode: "prefer"
+  cert_file: null
+  key_file: null
+  ca_file: null
+
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention_days: 30
+  compression: true
+
+monitoring:
+  slow_query_log: true
+  slow_query_threshold: 1000  # milliseconds
+  connection_monitoring: true

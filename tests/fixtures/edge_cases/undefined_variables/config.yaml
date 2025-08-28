@@ -1,0 +1,1 @@
+description: "Edge case: undefined variables should remain as literal strings"

@@ -1,0 +1,486 @@
+# Multi-Environment Configuration
+# Demonstrates advanced configuration management across environments
+
+__version: "1.0.0"
+
+__vars:
+  # Core application variables
+  app_name: "multi-env-app"
+  app_version: !env ['APP_VERSION', '1.0.0']
+  environment: !env ['ENVIRONMENT', 'development']
+  deployment_id: !env ['DEPLOYMENT_ID', 'local']
+
+  # Environment-specific variables
+  environment_config: !switch ['environment']
+    - case: 'production'
+      tier: "prod"
+      region: !env ['PROD_REGION', 'us-east-1']
+      domain: "example.com"
+      cdn_domain: "cdn.example.com"
+      replica_count: !env_int ['PROD_REPLICAS', 5]
+      resource_tier: "high"
+      backup_enabled: true
+      monitoring_level: "full"
+
+    - case: 'staging'
+      tier: "staging"
+      region: !env ['STAGING_REGION', 'us-west-2']
+      domain: "staging.example.com"
+      cdn_domain: "staging-cdn.example.com"
+      replica_count: !env_int ['STAGING_REPLICAS', 2]
+      resource_tier: "medium"
+      backup_enabled: true
+      monitoring_level: "standard"
+
+    - case: 'testing'
+      tier: "test"
+      region: !env ['TEST_REGION', 'us-west-1']
+      domain: "test.example.com"
+      cdn_domain: "test-cdn.example.com"
+      replica_count: 1
+      resource_tier: "low"
+      backup_enabled: false
+      monitoring_level: "basic"
+
+    - default: 'development'
+      tier: "dev"
+      region: "local"
+      domain: "localhost"
+      cdn_domain: "localhost"
+      replica_count: 1
+      resource_tier: "minimal"
+      backup_enabled: false
+      monitoring_level: "debug"
+
+  # Computed variables based on environment
+  service_prefix: !expand "{{app_name}}-{{environment_config.tier}}"
+  full_domain: !expand "{{environment_config.domain}}"
+  api_domain: !expand "api.{{environment_config.domain}}"
+
+# Application configuration
+application: !merge
+  - # Base application settings
+    name: !expand "{{app_name}}"
+    version: !expand "{{app_version}}"
+    environment: !expand "{{environment}}"
+    deployment_id: !expand "{{deployment_id}}"
+    tier: !expand "{{environment_config.tier}}"
+    region: !expand "{{environment_config.region}}"
+
+  - # Environment-specific application config
+    !switch ['environment']
+      - case: 'production'
+        debug: false
+        log_level: "WARN"
+        performance_monitoring: true
+        error_tracking: true
+        analytics: true
+        feature_flags:
+          new_ui: true
+          beta_features: false
+          experimental: false
+
+        security:
+          strict_mode: true
+          session_timeout: 3600
+          password_policy: "strict"
+          two_factor_required: true
+
+      - case: 'staging'
+        debug: false
+        log_level: "INFO"
+        performance_monitoring: true
+        error_tracking: true
+        analytics: false
+        feature_flags:
+          new_ui: true
+          beta_features: true
+          experimental: false
+
+        security:
+          strict_mode: true
+          session_timeout: 7200
+          password_policy: "medium"
+          two_factor_required: false
+
+      - case: 'testing'
+        debug: true
+        log_level: "DEBUG"
+        performance_monitoring: false
+        error_tracking: false
+        analytics: false
+        feature_flags:
+          new_ui: true
+          beta_features: true
+          experimental: true
+
+        security:
+          strict_mode: false
+          session_timeout: 86400
+          password_policy: "basic"
+          two_factor_required: false
+
+      - default: 'development'
+        debug: true
+        log_level: "DEBUG"
+        performance_monitoring: false
+        error_tracking: false
+        analytics: false
+        feature_flags:
+          new_ui: true
+          beta_features: true
+          experimental: true
+
+        security:
+          strict_mode: false
+          session_timeout: 86400
+          password_policy: "none"
+          two_factor_required: false
+
+# Infrastructure configuration
+infrastructure: !switch ['environment']
+  - case: 'production'
+    cloud_provider: !env ['CLOUD_PROVIDER', 'aws']
+
+    compute:
+      instance_type: !env ['PROD_INSTANCE_TYPE', 'm5.xlarge']
+      min_instances: !expand "{{environment_config.replica_count}}"
+      max_instances: !env_int ['PROD_MAX_INSTANCES', 20]
+      auto_scaling: true
+      load_balancer: true
+
+    storage:
+      type: "ssd"
+      size: !env ['PROD_STORAGE_SIZE', '100GB']
+      backup_retention: 30
+      encryption: true
+
+    network:
+      vpc_cidr: !env ['PROD_VPC_CIDR', '10.0.0.0/16']
+      public_subnets: ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+      private_subnets: ["10.0.10.0/24", "10.0.20.0/24", "10.0.30.0/24"]
+      nat_gateway: true
+      bastion_host: true
+
+    database:
+      instance_class: !env ['PROD_DB_INSTANCE', 'db.r5.xlarge']
+      multi_az: true
+      backup_retention: 30
+      read_replicas: 3
+      encryption: true
+      performance_insights: true
+
+  - case: 'staging'
+    cloud_provider: !env ['CLOUD_PROVIDER', 'aws']
+
+    compute:
+      instance_type: !env ['STAGING_INSTANCE_TYPE', 'm5.large']
+      min_instances: !expand "{{environment_config.replica_count}}"
+      max_instances: 5
+      auto_scaling: false
+      load_balancer: true
+
+    storage:
+      type: "ssd"
+      size: "50GB"
+      backup_retention: 7
+      encryption: true
+
+    network:
+      vpc_cidr: "10.1.0.0/16"
+      public_subnets: ["10.1.1.0/24", "10.1.2.0/24"]
+      private_subnets: ["10.1.10.0/24", "10.1.20.0/24"]
+      nat_gateway: true
+      bastion_host: false
+
+    database:
+      instance_class: "db.t3.large"
+      multi_az: false
+      backup_retention: 7
+      read_replicas: 1
+      encryption: true
+      performance_insights: false
+
+  - case: 'testing'
+    cloud_provider: "aws"
+
+    compute:
+      instance_type: "t3.medium"
+      min_instances: 1
+      max_instances: 2
+      auto_scaling: false
+      load_balancer: false
+
+    storage:
+      type: "gp2"
+      size: "20GB"
+      backup_retention: 1
+      encryption: false
+
+    network:
+      vpc_cidr: "10.2.0.0/16"
+      public_subnets: ["10.2.1.0/24"]
+      private_subnets: ["10.2.10.0/24"]
+      nat_gateway: false
+      bastion_host: false
+
+    database:
+      instance_class: "db.t3.micro"
+      multi_az: false
+      backup_retention: 1
+      read_replicas: 0
+      encryption: false
+      performance_insights: false
+
+  - default: 'development'
+    cloud_provider: "local"
+
+    compute:
+      container_runtime: "docker"
+      cpu_limit: "2"
+      memory_limit: "4GB"
+
+    storage:
+      type: "local"
+      path: "./data"
+      backup_retention: 0
+
+    database:
+      type: "postgresql"
+      host: "localhost"
+      port: 5432
+      container: true
+
+# Service configuration with environment-specific settings
+services: !merge
+  - # Web application service
+    web:
+      name: !expand "{{service_prefix}}-web"
+      image: !expand "{{app_name}}:{{app_version}}"
+      port: !env_int ['WEB_PORT', 3000]
+
+      resources: !switch ['environment_config.resource_tier']
+        - case: 'high'
+          cpu: "1000m"
+          memory: "2Gi"
+          replicas: !expand "{{environment_config.replica_count}}"
+        - case: 'medium'
+          cpu: "500m"
+          memory: "1Gi"
+          replicas: !expand "{{environment_config.replica_count}}"
+        - case: 'low'
+          cpu: "250m"
+          memory: "512Mi"
+          replicas: 1
+        - default: 'minimal'
+          cpu: "100m"
+          memory: "256Mi"
+          replicas: 1
+
+      environment_variables: !merge
+        - NODE_ENV: !expand "{{environment}}"
+          APP_NAME: !expand "{{app_name}}"
+          APP_VERSION: !expand "{{app_version}}"
+          API_URL: !expand "https://{{api_domain}}"
+        - !switch ['environment']
+          - case: 'production'
+            REDIS_URL: !env ['PROD_REDIS_URL']
+            DATABASE_URL: !env ['PROD_DATABASE_URL']
+            SESSION_SECRET: !secret ['PROD_SESSION_SECRET']
+          - case: 'staging'
+            REDIS_URL: !env ['STAGING_REDIS_URL']
+            DATABASE_URL: !env ['STAGING_DATABASE_URL']
+            SESSION_SECRET: !secret ['STAGING_SESSION_SECRET']
+          - default: 'development'
+            REDIS_URL: "redis://localhost:6379"
+            DATABASE_URL: "postgresql://localhost:5432/app_dev"
+            SESSION_SECRET: "dev-secret-key"
+
+  - # API service
+    api:
+      name: !expand "{{service_prefix}}-api"
+      image: !expand "{{app_name}}-api:{{app_version}}"
+      port: !env_int ['API_PORT', 8080]
+
+      resources: !switch ['environment_config.resource_tier']
+        - case: 'high'
+          cpu: "2000m"
+          memory: "4Gi"
+          replicas: !env_int ['API_REPLICAS', 10]
+        - case: 'medium'
+          cpu: "1000m"
+          memory: "2Gi"
+          replicas: !env_int ['API_REPLICAS', 3]
+        - case: 'low'
+          cpu: "500m"
+          memory: "1Gi"
+          replicas: 1
+        - default: 'minimal'
+          cpu: "250m"
+          memory: "512Mi"
+          replicas: 1
+
+  - # Worker service (conditional)
+    !if ['ENABLE_WORKERS']
+      worker:
+        name: !expand "{{service_prefix}}-worker"
+        image: !expand "{{app_name}}-worker:{{app_version}}"
+
+        resources: !switch ['environment_config.resource_tier']
+          - case: 'high'
+            cpu: "1000m"
+            memory: "2Gi"
+            replicas: 5
+          - case: 'medium'
+            cpu: "500m"
+            memory: "1Gi"
+            replicas: 2
+          - default: 'low'
+            cpu: "250m"
+            memory: "512Mi"
+            replicas: 1
+
+# Monitoring configuration
+monitoring: !switch ['environment_config.monitoring_level']
+  - case: 'full'
+    metrics:
+      enabled: true
+      retention: "90d"
+      detailed: true
+      custom_dashboards: true
+
+    alerting:
+      enabled: true
+      channels: ["pagerduty", "slack", "email"]
+      escalation_policy: "production"
+
+      rules:
+        - name: "high_error_rate"
+          threshold: "error_rate > 0.01"
+          duration: "5m"
+          severity: "critical"
+        - name: "high_latency"
+          threshold: "p95_latency > 1000ms"
+          duration: "10m"
+          severity: "warning"
+        - name: "low_availability"
+          threshold: "availability < 0.999"
+          duration: "5m"
+          severity: "critical"
+
+    tracing:
+      enabled: true
+      sampling_rate: 0.1
+      retention: "30d"
+
+    logging:
+      level: "INFO"
+      structured: true
+      retention: "90d"
+      centralized: true
+
+  - case: 'standard'
+    metrics:
+      enabled: true
+      retention: "30d"
+      detailed: false
+
+    alerting:
+      enabled: true
+      channels: ["slack", "email"]
+      escalation_policy: "staging"
+
+      rules:
+        - name: "service_down"
+          threshold: "up == 0"
+          duration: "5m"
+          severity: "critical"
+        - name: "high_error_rate"
+          threshold: "error_rate > 0.05"
+          duration: "15m"
+          severity: "warning"
+
+    tracing:
+      enabled: true
+      sampling_rate: 0.5
+      retention: "7d"
+
+    logging:
+      level: "INFO"
+      structured: true
+      retention: "30d"
+
+  - case: 'basic'
+    metrics:
+      enabled: true
+      retention: "7d"
+      detailed: false
+
+    alerting:
+      enabled: false
+
+    tracing:
+      enabled: false
+
+    logging:
+      level: "DEBUG"
+      structured: false
+      retention: "7d"
+
+  - default: 'debug'
+    metrics:
+      enabled: false
+
+    alerting:
+      enabled: false
+
+    tracing:
+      enabled: true
+      sampling_rate: 1.0
+      retention: "1d"
+
+    logging:
+      level: "DEBUG"
+      structured: false
+      console_output: true
+
+# External dependencies
+external_dependencies: !merge
+  - # Core dependencies (always required)
+    required:
+      - name: "database"
+        type: "postgresql"
+        version: "13+"
+
+      - name: "cache"
+        type: "redis"
+        version: "6+"
+
+  - # Environment-specific dependencies
+    !switch ['environment']
+      - case: 'production'
+        production_services:
+          - name: "cdn"
+            provider: "cloudfront"
+            domain: !expand "{{environment_config.cdn_domain}}"
+
+          - name: "email_service"
+            provider: "ses"
+            region: !expand "{{environment_config.region}}"
+
+          - name: "monitoring"
+            provider: "datadog"
+            api_key: !secret ['DATADOG_API_KEY']
+
+      - case: 'staging'
+        staging_services:
+          - name: "email_service"
+            provider: "sendgrid"
+            api_key: !secret ['SENDGRID_API_KEY']
+
+      - default: 'development'
+        development_services:
+          - name: "mailhog"
+            type: "smtp"
+            host: "localhost"
+            port: 1025

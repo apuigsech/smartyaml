@@ -1,0 +1,6 @@
+config:
+  host: "dynamic.example.com"
+  data:
+    included_data:
+      message: "This was dynamically included"
+  mode: null

@@ -1,0 +1,7 @@
+__template:
+  use: 'services.web'
+
+app:
+  version: "2.0.0"  # Override template
+  features:
+    - "analytics"   # Add to existing features

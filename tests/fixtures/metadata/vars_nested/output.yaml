@@ -1,0 +1,6 @@
+config:
+  app_name: "NestedApp"
+  debug_mode: true
+  port: 3000
+  db_host: "localhost"
+  db_user: "admin"

@@ -1,0 +1,4 @@
+# This file exists but should not be included due to false condition
+feature:
+  enabled: true
+  config: "optional_setting"

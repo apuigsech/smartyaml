@@ -1,0 +1,9 @@
+__vars:
+  app_name: "my-webapp"
+  environment: "staging"
+
+__template:
+  use: 'kubernetes.deployment'
+
+metadata:
+  namespace: "{{environment}}"  # Override template variable

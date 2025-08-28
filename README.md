@@ -1,39 +1,44 @@
 # SmartYAML
 
-Extended YAML format with custom directives for imports, environment variables, conditional processing, and more. SmartYAML maintains full compatibility with standard YAML while providing powerful additional features.
+A powerful YAML processing library that extends standard YAML parsing with advanced features for templating, variable substitution, environment variable integration, conditional logic, and schema validation. SmartYAML processes input YAML files through a comprehensive pipeline to resolve all special constructs and output plain YAML data structures.
 
 ## Features
 
-SmartYAML extends standard YAML with powerful custom directives:
+### 🔧 Core Processing Pipeline
+- **6-Stage Processing**: parsing → metadata → templates → directives → variables → validation
+- **Recursive Processing**: Depth-first resolution of nested structures and includes
+- **Version Compatibility**: Built-in `__version` checking for future-proofing
+- **Error Context**: Comprehensive error reporting with file/field location details
 
-### Core Directives
-- **!import(filename)** - Import content from text files
-- **!import_yaml(filename)** - Import and merge YAML files
-- **!env(VAR_NAME, default?)** - Access environment variables with optional defaults
-- **!expand(text)** - Variable substitution using `{{key}}` syntax
+### 📝 Metadata System
+- **`__vars`**: Variable definitions with inheritance and precedence
+- **`__template`**: Powerful template inheritance and overlay system
+- **`__schema`**: JSON Schema validation of final resolved YAML
+- **`__version`**: Version compatibility checking
+- **Auto-removal**: All `__*` metadata fields automatically removed from final output
 
-### Template System
-- **!template(template_name)** - Load external templates from template directory
-- **__template** - Inline template inheritance and merging
-- **__vars** - Variable definitions with inheritance support
+### 🎯 Directive System
+- **Environment Variables**: `!env`, `!env_int`, `!env_float`, `!env_bool`, `!secret`
+- **File Operations**: `!include`, `!include_if`, `!include_yaml`, `!include_yaml_if`
+- **Template Loading**: `!template`, `!template_if`
+- **Data Manipulation**: `!merge`, `!concat`
+- **Variable Operations**: `!var`, `!expand`
+- **Conditionals**: `!if`, `!switch`
 
-### Conditional Processing
-- **!include_if(condition, filename)** - Conditional file inclusion based on environment variables
-- **!include_yaml_if(condition, filename)** - Conditional YAML inclusion
-
-### Encoding
-- **!base64(data)** - Base64 encoding of strings
-- **!base64_decode(data)** - Base64 decoding of strings
-
-### Metadata
-- **Metadata fields** - `__field` prefixed fields for annotations (automatically removed)
+### 🔒 Security Features
+- **Path Sanitization**: Directory traversal protection
+- **File Size Limits**: Configurable limits (default 10MB)
+- **Recursion Protection**: Prevents infinite recursion and circular imports
+- **Environment Controls**: Whitelist/blacklist for environment variables
+- **Sandbox Mode**: Restricts file and environment access
+- **No Code Execution**: Safe YAML parsing only
 
 ## Installation
 
-### From PyPI
+### From PyPI (Recommended)
 
 ```bash
-pip install smartyaml
+pip install pysmartyaml
 ```
 
 ### From GitHub Repository
@@ -43,7 +48,7 @@ pip install smartyaml
 pip install git+https://github.com/apuigsech/smartyaml.git
 
 # Install specific version/tag
-pip install git+https://github.com/apuigsech/smartyaml.git@v0.1.0
+pip install git+https://github.com/apuigsech/smartyaml.git@v1.0.0
 
 # Clone and install for development
 git clone https://github.com/apuigsech/smartyaml.git
@@ -62,7 +67,7 @@ data = smartyaml.load("config.yaml")
 # Load with template support
 data = smartyaml.load("config.yaml", template_path="templates")
 
-# Load with variables and full options
+# Load with variables and full configuration
 variables = {"environment": "production", "version": "2.0.0"}
 data = smartyaml.load('config.yaml',
                      base_path='/custom/path',
@@ -74,498 +79,664 @@ data = smartyaml.load('config.yaml',
 yaml_content = """
 __vars:
   app: "MyApp"
-  
-database: !import_yaml db.yaml
-  password: !env(DB_PASSWORD)
-  name: !expand "{{app}}_database"
+  env: !env ['ENVIRONMENT', 'development']
+
+__template:
+  path: 'templates/base.yaml'
+  overlay: true
+
+database:
+  name: !expand "{{app}}_{{env}}_db"
+  host: !env ['DB_HOST', 'localhost']
+
+features: !include_yaml_if ['ENABLE_FEATURES', 'features.yaml']
 """
-data = smartyaml.loads(yaml_content)
+data = smartyaml.loads(yaml_content, template_path="templates")
 ```
-
-## Real-World Example: AI Agent Configuration
-
-```yaml
-# agent.yaml - Customer support agent configuration
-__vars:
-  agent_name: "ACME Customer Support"
-  company_name: "ACME Corp"
-  environment: !env(ENVIRONMENT, "development")
-
-# Inherit from base agent template
-__template:
-  <<: !template(agents/customer_support)
-
-# Agent-specific customization
-config:
-  name: !expand "{{agent_name}}"
-  welcome_message: !expand "Hello! Welcome to {{company_name}} support."
-  
-# Environment-specific features
-debug_tools: !include_yaml_if(DEBUG, tools/debug.yaml)
-production_monitoring: !include_yaml_if(PRODUCTION, monitoring/prod.yaml)
-
-# Load external resources
-knowledge_base: !import(knowledge/company_info.txt)
-faq_data: !import_yaml(data/faq.yaml)
-```
-
-```yaml
-# templates/agents/customer_support.yaml - Reusable template
-__vars:
-  model: "gpt-4"
-  temperature: 0.7
-  max_tokens: 1000
-  voice_id: "default"
-
-config:
-  llm:
-    model: !expand "{{model}}"
-    temperature: !expand "{{temperature}}"
-    max_tokens: !expand "{{max_tokens}}"
-  
-  voice:
-    provider: "elevenlabs"
-    voice_id: !expand "{{voice_id}}"
-    
-  conversation:
-    timeout: 300
-    max_turns: 50
-```
-
-**Loading:**
-```python
-import smartyaml
-
-# Load with template inheritance
-data = smartyaml.load("agent.yaml", template_path="templates")
-
-# Override with production settings
-prod_vars = {"environment": "production", "model": "gpt-4-turbo"}
-data = smartyaml.load("agent.yaml", 
-                     template_path="templates",
-                     variables=prod_vars)
-```
-
-**Result:** Deep merging with proper variable precedence - agent variables override template variables.
-
-## Directive Reference
-
-### 1. Text File Import: `!import(filename)`
-
-Loads the entire content of a file as a string.
-
-```yaml
-# config.yaml
-html_template: !import(template.html)
-sql_query: !import(queries/select_users.sql)
-```
-
-### 2. YAML Import with Merge: `!import_yaml(filename)`
-
-Loads YAML content from a file with optional local overrides.
-
-```yaml
-# Simple import
-database: !import_yaml(database.yaml)
-
-# Import with local overrides
-database: !import_yaml(database.yaml)
-  password: production_pass  # Overrides imported password
-```
-
-### 3. Environment Variables: `!env(VAR_NAME, default?)`
-
-Reads values from environment variables with optional defaults.
-
-```yaml
-database_url: !env(DATABASE_URL, "postgresql://localhost/myapp")
-debug_mode: !env(DEBUG, false)
-port: !env(PORT, 8080)
-```
-
-### 4. Conditional Text Import: `!include_if(condition, filename)`
-
-Includes a text file only if an environment variable condition is truthy.
-
-```yaml
-debug_config: !include_if(DEBUG_MODE, debug_settings.txt)
-development_notes: !include_if(DEV_ENV, notes.md)
-```
-
-**Truthy values:** `1`, `true`, `yes`, `on`, `enabled` (case-insensitive)
-
-### 5. Conditional YAML Import: `!include_yaml_if(condition, filename)`
-
-Includes a YAML file only if an environment variable condition is truthy.
-
-```yaml
-debug: !include_yaml_if(DEBUG, debug.yaml)
-database: !include_yaml_if(PRODUCTION, prod_db.yaml)
-```
-
-### 6. Template System
-
-#### External Templates: `!template(template_name)`
-
-Loads templates from a centralized template directory.
-
-```yaml
-# Loads from templates/postgres.yaml
-database: !template(postgres)
-
-# Loads from templates/redis.yaml  
-cache: !template(redis)
-```
-
-**Usage:** Pass `template_path` parameter to `smartyaml.load()`
-
-#### Inline Templates: `__template`
-
-Inherit from external templates with local customization.
-
-```yaml
-# agent.yaml
-__vars:
-  agent_name: "Customer Support"
-  company: "ACME Corp"
-
-__template:
-  <<: !template(agents/base)
-
-# Document-level overrides
-custom_prompt: !expand "You are {{agent_name}} for {{company}}"
-```
-
-```yaml
-# templates/agents/base.yaml
-__vars:
-  model: "gpt-4"
-  temperature: 0.7
-
-config:
-  llm: !expand "{{model}}"
-  temperature: !expand "{{temperature}}"
-  prompt: !expand "{{custom_prompt}}"
-```
-
-**Features:**
-- **Variable Inheritance**: Template variables available in main document
-- **Override Support**: Document variables override template variables
-- **Merge Semantics**: Uses YAML merge key (`<<:`) for composition
-
-### 7. Base64 Encoding/Decoding
-
-Encode strings to base64 or decode base64 strings.
-
-```yaml
-# Encoding
-secret: !base64(my_secret_password)  # -> bXlfc2VjcmV0X3Bhc3N3b3Jk
-
-# Decoding
-password: !base64_decode(bXlfc2VjcmV0X3Bhc3N3b3Jk)  # -> my_secret_password
-```
-
-### 8. Variable Substitution: `!expand(text)`
-
-Replaces `{{key}}` patterns with variable values from function parameters or `__vars` metadata.
-
-```yaml
-# Using __vars metadata
-__vars:
-  app_name: "MyApp"
-  version: "1.0.0"
-  environment: "production"
-
-title: !expand "{{app_name}} v{{version}}"
-api_url: !expand "https://api-{{environment}}.example.com"
-```
-
-```python
-# Using function variables (override __vars)
-variables = {"app_name": "CustomApp", "version": "2.0.0"}
-data = smartyaml.load("config.yaml", variables=variables)
-```
-
-**Variable Priority** (highest to lowest):
-1. Function parameters (`smartyaml.load(file, variables={...})`)
-2. Document `__vars` (main file)
-3. Template `__vars` (from imported templates)
-
-**Variable Inheritance:**
-Variables from imported templates are available for expansion in the main document, enabling powerful template composition patterns.
-
-### 9. Variable System: `__vars`
-
-Define variables for template expansion with inheritance support.
-
-```yaml
-# Basic variables
-__vars:
-  app_name: "MyApp"
-  version: "1.0.0"
-  debug: !env(DEBUG, false)
-
-config:
-  name: !expand "{{app_name}}"
-  version: !expand "{{version}}"
-  debug_mode: !expand "{{debug}}"
-```
-
-**Variable Sources & Precedence:**
-1. **Function variables** (highest): `smartyaml.load(file, variables={...})`
-2. **Document variables** (medium): `__vars` in main file
-3. **Template variables** (lowest): `__vars` from imported templates
-
-**Variable Inheritance:**
-```yaml
-# main.yaml
-__vars:
-  company: "ACME Corp"  # Overrides template variable
-  
-__template:
-  <<: !template(base)  # Inherits variables from templates/base.yaml
-  
-welcome: !expand "Welcome to {{company}}!"  # Uses overridden value
-```
-
-### 10. Metadata Fields
-
-Fields prefixed with `__` are automatically removed from the final result and serve as documentation/configuration.
-
-```yaml
-# Input
-__version: "1.2.3"        # Removed
-__build_date: 2024-01-15  # Removed
-app_name: "MyApp"         # Kept
-
-# Result: {"app_name": "MyApp"}
-```
-
-Metadata fields can contain SmartYAML directives:
-
-```yaml
-__vars:                   # Special metadata for variables
-  env: !env(ENVIRONMENT, "dev")
-  
-__template:              # Template inheritance metadata
-  <<: !template(base_config)
-  
-__build_info:            # Documentation metadata  
-  date: !env(BUILD_DATE)
-  
-app_url: !expand "https://{{env}}.example.com"
-```
-
-**Special Metadata Fields:**
-- `__vars`: Variable definitions
-- `__template`: Template inheritance
-- `__*`: Custom metadata (automatically removed)
 
 ## Complete Example
 
 ```yaml
 # config.yaml - Comprehensive SmartYAML demonstration
+__version: "1.0.0"
 
-# Variables and metadata for configuration
+# Variables with environment integration
 __vars:
   app_name: "MyApplication"
-  environment: !env(ENVIRONMENT, "development")
-  version: !env(APP_VERSION, "1.0.0")
-  
-__build_info:  # Documentation metadata (removed from final result)
-  date: !env(BUILD_DATE)
-  commit: !env(GIT_COMMIT, "unknown")
+  environment: !env ['ENVIRONMENT', 'development']
+  version: !env ['APP_VERSION', '1.0.0']
+  debug_mode: !env ['DEBUG', false]
 
-# Template inheritance with customization
+# Template inheritance
 __template:
-  <<: !template(apps/base_config)
+  use: 'apps.base_config'  # Loads from templates/apps/base_config.yaml
+  overlay: true           # Merge template with current content
 
-# Application configuration with variable expansion
+# JSON Schema validation
+__schema:
+  type: object
+  properties:
+    app:
+      type: object
+      required: [name, version]
+    database:
+      type: object
+      required: [host, name]
+  required: [app, database]
+
+# Application configuration with variable operations
 app:
-  name: !expand "{{app_name}}"
-  full_title: !expand "{{app_name}} v{{version}}"
-  environment: !expand "{{environment}}"
-  debug: !env(DEBUG, false)
-  api_url: !expand "https://api-{{environment}}.example.com"
+  name: !var "app_name"                                      # Direct string variable
+  full_title: !expand "{{app_name}} v{{version}}"            # String templating
+  environment: !var "environment"                            # Direct string variable
+  debug: !var "debug_mode"                                   # Direct boolean variable
+  api_url: !expand "https://api-{{environment}}.example.com" # String templating
 
-# Database configuration using variables and imports
-database: !import_yaml(config/database.yaml)
-  password: !env(DB_PASSWORD)
-  connection_string: !expand "postgresql://localhost/{{app_name}}_{{environment}}"
+# Database with conditional configuration
+database: !merge
+  - !include_yaml 'config/database_base.yaml'
+  - host: !env ['DB_HOST', 'localhost']
+    name: !expand "{{app_name}}_{{environment}}"         # String templating for name
+    password: !env ['DB_PASSWORD']
 
-# Template-based configuration
-cache: !template(redis)
+# Environment-specific features
+logging: !include_yaml_if ['DEBUG', 'config/debug_logging.yaml']
+monitoring: !include_yaml_if ['PRODUCTION', 'config/monitoring.yaml']
 
-# Conditional configuration based on environment
-logging: !include_yaml_if(DEBUG, config/debug_logging.yaml)
-
-# Large SQL queries from external files
+# External content inclusion
+documentation: !include 'docs/api_guide.md'
 queries:
-  get_users: !import(sql/users.sql)
-  analytics: !import(sql/analytics.sql)
+  users: !include 'sql/select_users.sql'
 
-# Secrets with encoding
-secrets:
-  api_key: !base64_decode(YWJjZGVmZ2hpams=)
-  jwt_secret: !expand "{{app_name}}_secret_{{environment}}"
-
-# Development-only settings
-dev_tools: !include_if(DEVELOPMENT, dev_tools.txt)
-
-# Service configuration with variable expansion
-services:
-  api:
-    name: !expand "{{app_name}}-api"
-    image: !expand "{{app_name}}:{{version}}"
-    url: !expand "https://{{app_name}}-{{environment}}.example.com"
+# Conditional service configuration
+services: !switch ['DEPLOYMENT_TYPE']
+  - case: 'kubernetes'
+    deployment: !include_yaml 'k8s/deployment.yaml'
+  - case: 'docker'
+    deployment: !include_yaml 'docker/compose.yaml'
+  - default: 'standalone'
+    deployment: !include_yaml 'config/standalone.yaml'
 ```
 
-**Loading with templates and variables:**
+## Metadata Fields Reference
+
+SmartYAML recognizes only specific metadata fields that have special processing behavior. All other fields starting with `__` are **custom metadata** and are ignored.
+
+### Recognized Metadata Fields
+- **`__version`**: Version compatibility checking
+- **`__vars`**: Variable definitions (available for substitution)
+- **`__template`**: Template inheritance and overlay configuration
+- **`__schema`**: JSON Schema validation rules
+
+### Custom Metadata Fields
+Any other field starting with `__` (like `__author`, `__created`, `__description`) is **custom metadata** and will be removed from the final output.
+
+**Example:**
+```yaml
+# Recognized metadata - these work as expected
+__vars:
+  app_name: "MyApp"
+__version: "1.0.0"
+
+# Custom metadata - these are ignored
+__author: "John Doe"
+__created: "2024-01-01"
+
+app:
+  name: "{{app_name}}"
+```
+
+### `__version`
+Version compatibility checking to ensure YAML files work with library version.
+
+```yaml
+__version: "1.0.0"  # Requires SmartYAML v1.0.0+
+```
+
+### `__vars`
+Variable definitions with inheritance support. Variables can contain directives.
+
+```yaml
+__vars:
+  app_name: "MyApp"
+  environment: !env ['ENVIRONMENT', 'development']
+  db_host: !env ['DB_HOST', 'localhost']
+  connection_string: !expand "postgresql://{{db_host}}/{{app_name}}"
+
+# Usage with expansion
+database_url: !expand "{{connection_string}}_{{environment}}"
+```
+
+**Variable Precedence (highest to lowest):**
+1. Function parameters: `smartyaml.load(file, variables={...})`
+2. Document `__vars`: In the main YAML file
+3. Template `__vars`: From inherited templates
+
+### `__template`
+Template inheritance and overlay system.
+
+```yaml
+__template:
+  path: 'templates/base.yaml'     # Direct file path
+  use: 'apps.microservice'        # Template name (loads from template_path)
+  overlay: true                   # true=merge, false=replace (default: true)
+```
+
+**Template Inheritance Chain:**
+```yaml
+# templates/base.yaml
+__vars:
+  timeout: 30
+  log_level: "INFO"
+
+config:
+  timeout: !expand "{{timeout}}"
+  logging:
+    level: !expand "{{log_level}}"
+```
+
+```yaml
+# service.yaml
+__vars:
+  service_name: "UserAPI"
+  timeout: 60  # Overrides template value
+
+__template:
+  use: 'base'
+
+# Service-specific additions
+service:
+  name: !expand "{{service_name}}"
+  # Inherits config.timeout=60, config.logging.level="INFO"
+```
+
+### `__schema`
+JSON Schema validation of the final resolved YAML.
+
+```yaml
+__schema:
+  type: object
+  properties:
+    app:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+          pattern: "^\\d+\\.\\d+\\.\\d+$"
+      required: [name, version]
+    database:
+      type: object
+      properties:
+        host: {type: string}
+        port: {type: integer, minimum: 1, maximum: 65535}
+      required: [host, port]
+  required: [app, database]
+
+# Schema composition with directives
+__schema: !merge
+  - !include_yaml 'schemas/common.yaml'
+  - !include_yaml 'schemas/app_specific.yaml'
+```
+
+## Directives Reference
+
+### Environment Variables
+
+#### `!env ['VAR_NAME', 'default']`
+Access environment variables as strings with optional defaults. Environment variables are always returned as strings.
+
+```yaml
+database_host: !env ['DB_HOST', 'localhost']
+port: !env ['PORT', '8080']          # Returns string '8080'
+debug_mode: !env ['DEBUG', 'false']  # Returns string 'false'
+```
+
+#### `!env_int ['VAR_NAME', default_int]`
+Access environment variables and convert to integers.
+
+```yaml
+port: !env_int ['PORT', 8080]              # Returns integer 8080
+max_connections: !env_int ['MAX_CONN', 100]  # Returns integer 100
+workers: !env_int ['WORKERS', 4]            # Returns integer 4
+```
+
+#### `!env_float ['VAR_NAME', default_float]`
+Access environment variables and convert to floats.
+
+```yaml
+timeout: !env_float ['TIMEOUT', 30.5]       # Returns float 30.5
+cpu_limit: !env_float ['CPU_LIMIT', 1.0]    # Returns float 1.0
+memory_ratio: !env_float ['MEM_RATIO', 0.8] # Returns float 0.8
+```
+
+#### `!env_bool ['VAR_NAME', default_bool]`
+Access environment variables and convert to booleans. Accepts: `true`/`false`, `yes`/`no`, `1`/`0` (case-insensitive).
+
+```yaml
+debug_mode: !env_bool ['DEBUG', false]      # Returns boolean false
+ssl_enabled: !env_bool ['SSL_ENABLE', true] # Returns boolean true
+auto_deploy: !env_bool ['AUTO_DEPLOY', false] # Returns boolean false
+```
+
+#### `!secret ['SECRET_NAME', 'default']`
+Same as `!env` - returns strings (future versions will support secure secret stores).
+
+```yaml
+api_key: !secret ['API_KEY', 'dev_key_123']
+jwt_secret: !secret ['JWT_SECRET', 'fallback_secret']
+```
+
+### File Operations
+
+#### `!include 'filename'`
+Include file content as string (supports both text and YAML files).
+
+```yaml
+# Text files loaded as strings
+sql_query: !include 'queries/users.sql'
+html_template: !include 'templates/email.html'
+
+# YAML files processed through full SmartYAML pipeline
+config: !include 'config/database.yaml'
+```
+
+#### `!include_if ['CONDITION', 'filename']`
+Conditional file inclusion based on environment variable.
+
+```yaml
+debug_config: !include_if ['DEBUG_MODE', 'debug.yaml']
+prod_settings: !include_if ['PRODUCTION', 'prod_overrides.yaml']
+```
+
+**Truthy values:** `true`, `1`, `yes`, `on`, `enabled` (case-insensitive)
+
+#### `!include_yaml 'filename'`
+Include raw YAML content without processing SmartYAML directives.
+
+```yaml
+# Loads YAML but doesn't process any !directives within it
+external_config: !include_yaml 'third_party/config.yaml'
+```
+
+#### `!include_yaml_if ['CONDITION', 'filename']`
+Conditional raw YAML inclusion.
+
+```yaml
+legacy_config: !include_yaml_if ['USE_LEGACY', 'legacy/config.yaml']
+```
+
+### Template System
+
+#### `!template 'template_name'`
+Load templates from template directory using dot notation.
+
+```yaml
+# Loads templates/database/postgres.yaml
+database: !template 'database.postgres'
+
+# Loads templates/services/api.yaml
+api_service: !template 'services.api'
+```
+
+#### `!template_if ['CONDITION', 'template_name']`
+Conditional template loading.
+
+```yaml
+cache: !template_if ['ENABLE_CACHE', 'components.redis']
+monitoring: !template_if ['PRODUCTION', 'observability.prometheus']
+```
+
+### Data Operations
+
+#### `!merge [item1, item2, ...]`
+Deep merge multiple data structures (objects/arrays).
+
+```yaml
+# Merge multiple configuration sources
+database_config: !merge
+  - !include_yaml 'config/db_base.yaml'
+  - !include_yaml 'config/db_env_overrides.yaml'
+  - host: !env ['DB_HOST', 'localhost']
+    pool_size: !env ['DB_POOL_SIZE', 10]
+
+# Merge template with local overrides
+service_config: !merge
+  - !template 'services.base'
+  - name: 'user-service'
+    replicas: 3
+```
+
+#### `!concat [item1, item2, ...]`
+Concatenate arrays/lists.
+
+```yaml
+# Combine multiple lists
+all_endpoints: !concat
+  - !include_yaml 'api/public_endpoints.yaml'
+  - !include_yaml 'api/admin_endpoints.yaml'
+  - ['/health', '/metrics']  # Additional endpoints
+
+# Dynamic list building
+middleware: !concat
+  - ['cors', 'logging']
+  - !include_yaml_if ['DEVELOPMENT', 'middleware/dev.yaml']
+  - !include_yaml_if ['PRODUCTION', 'middleware/prod.yaml']
+```
+
+### Variable Operations
+
+#### `!var 'variable_name'`
+Direct variable resolution with original type preservation. Unlike `!expand`, this returns the variable value in its original data type.
+
+```yaml
+__vars:
+  service_name: "user-api"        # string
+  port: 8080                      # integer
+  ssl_enabled: true               # boolean
+  timeout: 30.5                   # float
+  nullable_setting: null          # null
+
+# Direct variable access (preserves original types)
+app:
+  name: !var "service_name"       # Returns string: "user-api"
+  port: !var "port"               # Returns integer: 8080
+  ssl: !var "ssl_enabled"         # Returns boolean: true
+  timeout: !var "timeout"         # Returns float: 30.5
+  setting: !var "nullable_setting" # Returns null
+
+# Supports default values with pipe syntax
+database:
+  host: !var "db_host|localhost"         # String default
+  port: !var "db_port|5432"              # Integer default
+  ssl: !var "db_ssl|true"                # Boolean default
+
+# Supports nested variable access with dot notation
+config:
+  db_host: !var "database.host"
+  first_service: !var "services.0.name"
+```
+
+#### `!expand 'text with {{variables}}'`
+String expansion with variable substitution. Always returns strings with template processing.
+
+```yaml
+__vars:
+  service_name: "user-api"
+  environment: !env ['ENVIRONMENT', 'dev']
+  version: !env ['VERSION', '1.0.0']
+  port: 8080                      # integer
+
+# String template expansion (always returns strings)
+app_title: !expand "{{service_name}} v{{version}}"     # Returns: "user-api v1.0.0"
+api_endpoint: !expand "https://{{service_name}}-{{environment}}.example.com"
+connection_string: !expand "postgresql://{{db_host}}/{{service_name}}_{{environment}}"
+port_string: !expand "{{port}}"                        # Returns: "8080" (string)
+
+# Complex template processing
+container_name: !expand "{{service_name}}-{{environment}}-{{version}}"
+log_path: !expand "/var/log/{{service_name}}/{{environment}}.log"
+```
+
+**Key Differences:**
+- **`!var "port"`** → `8080` (integer preserved)
+- **`!expand "{{port}}"`** → `"8080"` (string result)
+- **`!var`** is for direct variable access with type preservation
+- **`!expand`** is for string templating with variable substitution
+
+### Conditionals
+
+#### `!if ['ENV_VAR', value]`
+Conditional field inclusion.
+
+```yaml
+# Include field only if DEBUG is truthy
+debug_panel: !if ['DEBUG', {'enabled': true, 'level': 'verbose'}]
+
+# Conditional with complex value
+development_tools: !if ['DEVELOPMENT']
+  webpack_dev_server: true
+  hot_reload: true
+  source_maps: true
+```
+
+#### `!switch ['ENV_VAR', cases]`
+Multi-way conditional based on environment variable value.
+
+```yaml
+database: !switch ['DATABASE_TYPE']
+  - case: 'postgres'
+    driver: 'postgresql+psycopg2'
+    port: 5432
+    pool_size: 20
+  - case: 'mysql'
+    driver: 'mysql+pymysql'
+    port: 3306
+    pool_size: 15
+  - case: 'sqlite'
+    driver: 'sqlite'
+    file: 'app.db'
+  - default: 'postgres'
+    driver: 'postgresql+psycopg2'
+    port: 5432
+
+# Service configuration based on deployment type
+deployment: !switch ['DEPLOYMENT']
+  - case: 'kubernetes'
+    type: 'k8s'
+    config: !include_yaml 'k8s/deployment.yaml'
+  - case: 'docker'
+    type: 'container'
+    config: !include_yaml 'docker/compose.yaml'
+  - default: 'standalone'
+    type: 'process'
+    config: !include_yaml 'config/standalone.yaml'
+```
+
+## Advanced Examples
+
+### Multi-Service Configuration
+
+```yaml
+# services.yaml - Configure multiple services with shared templates
+__vars:
+  company: "ACME Corp"
+  environment: !env ['ENVIRONMENT', 'development']
+  version: !env ['VERSION', '1.0.0']
+
+__template:
+  use: 'infrastructure.base'
+
+# API Gateway
+gateway: !merge
+  - !template 'services.api_gateway'
+  - name: !expand "{{company}}-gateway"
+    version: !expand "{{version}}"
+    config:
+      upstream_services: !concat
+        - !include_yaml 'services/core_services.yaml'
+        - !include_yaml_if ['ENABLE_ANALYTICS', 'services/analytics.yaml']
+
+# User Service
+user_service: !merge
+  - !template 'services.microservice'
+  - name: 'user-service'
+    database: !switch ['USER_DB_TYPE']
+      - case: 'postgres'
+        config: !template 'databases.postgres'
+      - case: 'mongodb'
+        config: !template 'databases.mongodb'
+      - default: 'sqlite'
+        config: !template 'databases.sqlite'
+
+# Environment-specific overrides
+overrides: !include_yaml_if ['PRODUCTION', 'config/production_overrides.yaml']
+```
+
+### Configuration with Schema Validation
+
+```yaml
+# app_config.yaml - Production application configuration
+__version: "1.0.0"
+
+__vars:
+  app_name: "ProductionApp"
+  environment: "production"
+  replica_count: !env ['REPLICAS', 3]
+
+__schema:
+  type: object
+  properties:
+    application:
+      type: object
+      properties:
+        name: {type: string, minLength: 1}
+        replicas: {type: integer, minimum: 1, maximum: 100}
+        database:
+          type: object
+          properties:
+            host: {type: string}
+            port: {type: integer, minimum: 1, maximum: 65535}
+            ssl: {type: boolean}
+          required: [host, port]
+      required: [name, replicas, database]
+  required: [application]
+
+application:
+  name: !var "app_name"                                    # String variable
+  replicas: !var "replica_count"                          # Integer variable (preserves type for schema validation)
+  database:
+    host: !env ['DB_HOST']  # Required - will fail validation if not set
+    port: !env_int ['DB_PORT', 5432]                       # Integer from environment
+    ssl: !env_bool ['DB_SSL', true]                        # Boolean from environment
+    connection_string: !expand "postgresql://{{database.host}}:{{database.port}}/{{app_name}}"
+```
+
+## Configuration API
+
+SmartYAML provides a fluent configuration API:
 
 ```python
 import smartyaml
+from smartyaml.config import SmartYAMLConfigBuilder
 
-# Load with template support
-data = smartyaml.load("config.yaml", template_path="templates")
+# Basic configuration
+config = SmartYAMLConfigBuilder().build()
 
-# Override variables via function parameters
-custom_vars = {"environment": "production", "version": "2.0.0"}
-data = smartyaml.load("config.yaml", 
-                     template_path="templates",
-                     variables=custom_vars)
+# Development preset
+config = SmartYAMLConfigBuilder().development_mode().build()
 
-# Load string content
-yaml_string = "app: !expand '{{name}}'"
-data = smartyaml.loads(yaml_string, variables={"name": "MyApp"})
+# Production preset
+config = SmartYAMLConfigBuilder().production_mode().build()
+
+# Custom configuration
+config = (SmartYAMLConfigBuilder()
+          .with_template_path("./templates")
+          .with_max_file_size(50 * 1024 * 1024)  # 50MB
+          .with_security_options(sandbox_mode=True)
+          .with_allowed_env_vars(['APP_*', 'DB_*'])
+          .build())
+
+# Use with load functions
+data = smartyaml.load("config.yaml", config=config)
 ```
-
-## Advanced Template Examples
-
-### Template Inheritance Chain
-
-```yaml
-# templates/base/app.yaml - Base application template
-__vars:
-  default_timeout: 30
-  log_level: "INFO"
-
-__template:
-  application:
-    timeout: !expand "{{default_timeout}}"
-    logging:
-      level: !expand "{{log_level}}"
-```
-
-```yaml
-# templates/environments/production.yaml - Production template
-__vars:
-  log_level: "WARN"
-  replica_count: 3
-
-__template:
-  <<: !template(base/app)
-  
-  # Production-specific overrides
-  application:
-    replicas: !expand "{{replica_count}}"
-    security:
-      enabled: true
-```
-
-```yaml
-# myapp.yaml - Final configuration
-__vars:
-  app_name: "MyService"
-  default_timeout: 60  # Override base template
-
-__template:
-  <<: !template(environments/production)
-
-# Application-specific additions
-app_config:
-  name: !expand "{{app_name}}"
-  custom_feature: true
-```
-
-**Result:** Deep merging with proper variable precedence - app variables override template variables.
-
-### Multi-Template Composition
-
-```yaml
-# Service configuration combining multiple templates
-__vars:
-  service_name: "UserAPI"
-  environment: "staging"
-
-__template:
-  # Combine database, cache, and monitoring templates
-  database: !template(components/postgres)
-  cache: !template(components/redis)
-  monitoring: !template(components/prometheus)
-  
-# Service-specific configuration
-service:
-  name: !expand "{{service_name}}"
-  environment: !expand "{{environment}}"
-  endpoints:
-    health: "/health"
-    metrics: "/metrics"
-```
-
-## Security Features
-
-- **File Size Limits**: Default 10MB limit per file, configurable
-- **Recursion Protection**: Default 10-level deep import limit
-- **Path Security**: Directory traversal protection
-- **Cycle Detection**: Prevents circular import chains
-- **No Code Execution**: Safe YAML parsing only
-- **Template Path Validation**: Prevents access to system directories
 
 ## Error Handling
 
-SmartYAML provides specific exceptions with detailed context:
+SmartYAML provides comprehensive error reporting:
 
-- `SmartYAMLError` - Base exception
-- `SmartYAMLFileNotFoundError` - Referenced file not found
-- `InvalidPathError` - Invalid or unsafe path access
-- `EnvironmentVariableError` - Environment variable issues
-- `TemplatePathError` - Template path configuration issues
-- `Base64Error` - Base64 encoding/decoding failures
-- `ResourceLimitError` - File size or resource limits exceeded
-- `RecursionLimitError` - Import recursion or circular imports
-- `ConstructorError` - Invalid arguments or constructor state
+```python
+import smartyaml
+from smartyaml import (
+    SmartYAMLError, VersionMismatchError, FileNotFoundError,
+    DirectiveSyntaxError, VariableNotFoundError, SchemaValidationError
+)
+
+try:
+    data = smartyaml.load("config.yaml")
+except VersionMismatchError as e:
+    print(f"Version incompatible: {e}")
+except FileNotFoundError as e:
+    print(f"Missing file: {e}")
+except DirectiveSyntaxError as e:
+    print(f"Invalid directive syntax: {e}")
+except SchemaValidationError as e:
+    print(f"Schema validation failed: {e}")
+except SmartYAMLError as e:
+    print(f"SmartYAML error: {e}")
+```
+
+All errors include:
+- **File context**: Which file caused the error
+- **Field context**: Which field/path in the YAML
+- **Operation context**: What operation was being performed
+- **Detailed messages**: Clear explanation of the issue
+
+## Security Considerations
+
+SmartYAML implements multiple security layers:
+
+### Safe Defaults
+- **File size limits**: 10MB default (configurable)
+- **Recursion limits**: 20 levels max (configurable)
+- **Path validation**: Prevents directory traversal
+- **No code execution**: Only safe YAML parsing
+
+### Environment Variable Controls
+```python
+# Whitelist specific variables
+config = SmartYAMLConfigBuilder().with_allowed_env_vars([
+    'APP_NAME', 'DB_HOST', 'API_*'
+]).build()
+
+# Blacklist sensitive variables
+config = SmartYAMLConfigBuilder().with_forbidden_env_vars([
+    'SECRET_KEY', 'PRIVATE_KEY', '*_PASSWORD'
+]).build()
+```
+
+### Sandbox Mode
+```python
+# Restricts file access and environment variables
+config = SmartYAMLConfigBuilder().with_security_options(
+    sandbox_mode=True,
+    strict_security=True
+).build()
+```
 
 ## Development
 
 ### Testing
-
 ```bash
-python -m pytest
-python -m pytest --cov=smartyaml
+python -m pytest                    # Run all tests (230+)
+python -m pytest --cov=smartyaml    # Run with coverage
+python -m pytest -v                 # Verbose output
 ```
 
 ### Code Quality
-
 ```bash
-black smartyaml/
-isort smartyaml/
-flake8 smartyaml/
-mypy smartyaml/
+black smartyaml/          # Format code
+isort smartyaml/          # Sort imports
+flake8 smartyaml/         # Lint code
+mypy smartyaml/           # Type check
 ```
 
 ### Building
-
 ```bash
-python -m build
+python -m build          # Build packages
+pip install -e ".[dev]"  # Development install
 ```
+
+## Requirements
+
+- **Python**: 3.9+ (3.7+ for basic usage)
+- **Dependencies**: PyYAML 5.1+, minimal external dependencies
+- **Optional**: jsonschema for schema validation
 
 ## Compatibility
 
-- **Python**: 3.7+
-- **YAML**: Full YAML 1.2 compatibility
-- **Dependencies**: PyYAML 5.1+
-
-SmartYAML files are valid YAML files - standard YAML parsers will treat custom directives as regular tagged values, making the format backward-compatible.
+SmartYAML files are valid YAML files. Standard YAML parsers will treat custom directives as regular tagged values, making the format backward-compatible.
 
 ## License
 
@@ -574,3 +745,7 @@ MIT License - see LICENSE file for details.
 ## Contributing
 
 Contributions welcome! Please see CONTRIBUTING.md for guidelines.
+
+---
+
+**SmartYAML**: Making YAML configurations smarter, more powerful, and easier to maintain.

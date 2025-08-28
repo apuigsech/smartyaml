@@ -1,0 +1,5 @@
+# Template with conflicting variable
+__vars:
+  shared_var: "template_value"  # Conflicts with main file
+  template_only_var: "template_data"
+template_content: "This is from template"

@@ -1,0 +1,9 @@
+__vars:
+  app_name: "MyApp"
+  version: "2.1.0"
+  environment: "production"
+
+config:
+  description: !expand "Application {{app_name}} version {{version}}"
+  startup_message: !expand "Starting {{app_name}} in {{environment}} mode"
+  log_path: !expand "/var/log/{{app_name}}/{{environment}}.log"

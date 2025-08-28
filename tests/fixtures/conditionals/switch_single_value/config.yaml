@@ -1,0 +1,4 @@
+description: "Switch directive returning single value - when only one key-value pair remains, return just the value"
+
+env_vars:
+  ENVIRONMENT: "production"

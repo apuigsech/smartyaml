@@ -1,0 +1,45 @@
+# Example 2: Composing Schema from Multiple Files
+# Demonstrates building a complete schema by merging multiple schema files
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "ComposedApp" 
+  app_version: "2.1.0"
+  environment: "production"
+  
+# Compose schema from multiple files using !merge
+__schema: !merge
+  - !include_yaml 'schemas/base_schema.yaml'
+  - properties: !merge
+      - !include_yaml 'schemas/app_properties.yaml'
+      - !include_yaml 'schemas/database_properties.yaml'
+      - !include_yaml 'schemas/monitoring_properties.yaml'
+  - !include_yaml 'schemas/required_fields.yaml'
+
+# Application configuration
+app:
+  name: !var "app_name"
+  version: !var "app_version" 
+  environment: !var "environment"
+  port: 8080
+  features: ["auth", "metrics", "caching"]
+
+database:
+  type: "postgresql"
+  host: "db.example.com"
+  port: 5432
+  name: !expand "{{app_name}}_{{environment}}"
+  ssl: true
+  pool_size: 20
+  timeout: 30.0
+
+monitoring:
+  enabled: true
+  metrics:
+    endpoint: "http://metrics.example.com/collect"
+    interval: 60
+  logging:
+    level: "INFO"
+    format: "json"
+    output: "stdout"

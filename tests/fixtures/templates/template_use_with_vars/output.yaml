@@ -1,0 +1,25 @@
+apiVersion: "apps/v1"
+kind: "Deployment"
+
+metadata:
+  name: "my-webapp"
+  namespace: "staging"
+  labels:
+    app: "my-webapp"
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "my-webapp"
+  template:
+    metadata:
+      labels:
+        app: "my-webapp"
+    spec:
+      containers:
+      - name: "my-webapp"
+        image: "my-webapp:latest"
+        env:
+        - name: "ENVIRONMENT"
+          value: "staging"

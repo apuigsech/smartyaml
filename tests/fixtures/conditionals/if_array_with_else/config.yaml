@@ -1,0 +1,6 @@
+description: "Test !if directive with else clause using array syntax"
+env_vars:
+  # SERVER_ENABLED is intentionally not set (false)
+  HIGH_PERFORMANCE: "true"
+  DETAILED_LOGS: "1"
+  SECURITY_ENABLED: "false"

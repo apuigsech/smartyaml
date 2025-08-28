@@ -1,0 +1,5 @@
+__vars:
+  template_var: "from_template"
+
+template_data:
+  value: "{{template_var}}"

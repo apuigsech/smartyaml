@@ -1,0 +1,8 @@
+description: "Basic security test: environment variable access for allowed variables"
+
+env_vars:
+  ALLOWED_VAR: "allowed_value"
+  PUBLIC_VAR: "public_value"
+
+
+

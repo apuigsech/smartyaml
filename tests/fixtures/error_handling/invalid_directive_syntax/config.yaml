@@ -1,0 +1,3 @@
+expected_error: "DirectiveSyntaxError"
+description: "Invalid directive syntax should raise DirectiveSyntaxError"
+environment: {}

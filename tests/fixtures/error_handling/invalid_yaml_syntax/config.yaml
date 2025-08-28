@@ -1,0 +1,3 @@
+expected_error: "YAMLError"
+description: "Invalid YAML syntax should raise YAMLError or ParserError"
+environment: {}

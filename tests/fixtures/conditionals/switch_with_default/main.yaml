@@ -1,0 +1,12 @@
+config: !switch
+  var: 'MODE'
+  cases:
+    - case: 'development'
+      debug: true
+      port: 3000
+    - case: 'production'
+      debug: false
+      port: 8080
+    - default: 'unknown'
+      debug: false
+      port: 5000

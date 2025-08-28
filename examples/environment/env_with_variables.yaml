@@ -1,0 +1,80 @@
+# Environment Variables with Variable Substitution
+# Combines environment variables with SmartYAML variables
+
+__version: "1.0.0"
+
+__vars:
+  # Environment variables used as variables
+  app_name: !env ['APP_NAME', 'default-app']
+  environment: !env ['ENVIRONMENT', 'development']
+  region: !env ['AWS_REGION', 'us-east-1']
+  cluster: !env ['CLUSTER_NAME', 'default-cluster']
+
+  # Derived variables
+  service_prefix: !expand "{{app_name}}-{{environment}}"
+  database_name: !expand "{{app_name}}_{{environment}}_db"
+
+# Application configuration using both env vars and variables
+application:
+  name: !expand "{{app_name}}"
+  full_name: !expand "{{service_prefix}}-service"
+  environment: !expand "{{environment}}"
+  region: !expand "{{region}}"
+
+  # Direct environment variable access
+  version: !env ['APP_VERSION', '1.0.0']
+  build_id: !env ['BUILD_ID', 'local']
+  commit_sha: !env ['COMMIT_SHA', 'unknown']
+
+# AWS resources with naming patterns
+aws:
+  s3_bucket: !expand "{{service_prefix}}-bucket"
+  dynamodb_table: !expand "{{service_prefix}}-table"
+  sqs_queue: !expand "{{service_prefix}}-queue"
+  lambda_function: !expand "{{service_prefix}}-function"
+
+  # Environment-specific settings
+  vpc_id: !env ['VPC_ID', 'vpc-default']
+  subnet_ids: !env ['SUBNET_IDS', 'subnet-1,subnet-2']
+  security_group: !env ['SECURITY_GROUP_ID', 'sg-default']
+
+# Database configuration
+database:
+  name: !expand "{{database_name}}"
+  host: !env ['DB_HOST', 'localhost']
+  port: !env_int ['DB_PORT', 5432]
+
+  # Connection string composition
+  connection_string: !expand "postgresql://{{database.host}}:{{database.port}}/{{database_name}}"
+
+  # Environment-specific credentials
+  username: !env ['DB_USERNAME', 'postgres']
+  password: !secret ['DB_PASSWORD', 'defaultpass']
+
+# Kubernetes configuration
+kubernetes:
+  namespace: !expand "{{service_prefix}}"
+  deployment_name: !expand "{{service_prefix}}-deployment"
+  service_name: !expand "{{service_prefix}}-service"
+
+  # Environment variables for the container
+  container_env:
+    APP_NAME: !expand "{{app_name}}"
+    ENVIRONMENT: !expand "{{environment}}"
+    DATABASE_URL: !env ['DATABASE_URL', 'postgresql://localhost:5432/{{database_name}}']
+    REDIS_URL: !env ['REDIS_URL', 'redis://localhost:6379']
+
+# Monitoring and logging
+observability:
+  # CloudWatch log group
+  log_group: !expand "/aws/lambda/{{service_prefix}}"
+
+  # Metrics namespace
+  metrics_namespace: !expand "{{app_name}}/{{environment}}"
+
+  # Jaeger service name
+  tracing_service: !expand "{{service_prefix}}"
+
+  # Environment-specific settings
+  log_level: !env ['LOG_LEVEL', 'INFO']
+  tracing_enabled: !env_bool ['TRACING_ENABLED', false]

@@ -1,0 +1,15 @@
+config:
+  enabled_feature: !if
+    var: 'ENABLE_FEATURE'
+    then: 'feature is enabled'
+    else: 'feature is disabled'
+  disabled_feature: !if
+    var: 'DISABLE_FEATURE'
+    then: 'this will show'
+    else: 'feature is off'
+  
+database:
+  debug_mode: !if
+    var: 'DEBUG'
+    then: true
+    else: false

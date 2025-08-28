@@ -1,0 +1,9 @@
+database:
+  host: "localhost"
+  port: 5432
+  name: "app_db"
+  ssl: true
+
+connection:
+  pool_size: 10
+  retry_attempts: 3

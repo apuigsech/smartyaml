@@ -1,0 +1,25 @@
+# Example 1: Simple Single Schema File Import
+# Demonstrates loading a complete schema from one external file
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "SimpleApp"
+  app_version: "1.0.0"
+  port: 8080
+  debug_mode: false
+
+# Load complete schema from external file
+__schema: !include_yaml 'schemas/simple_app_schema.yaml'
+
+# Application configuration
+app:
+  name: !var "app_name"
+  version: !var "app_version"
+  port: !var "port"
+  debug: !var "debug_mode"
+
+database:
+  host: "localhost"
+  port: 5432
+  ssl: true

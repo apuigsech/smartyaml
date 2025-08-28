@@ -1,0 +1,7 @@
+__vars:
+  defined_var: "defined"
+
+config:
+  defined: "{{defined_var}}"
+  undefined: "{{undefined_var}}"
+  nested_undefined: "{{obj.missing.property}}"

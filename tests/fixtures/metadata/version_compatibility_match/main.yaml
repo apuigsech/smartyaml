@@ -1,0 +1,7 @@
+__version: "1.0.0"
+__vars:
+  app_name: "TestApp"
+
+config:
+  name: "{{app_name}}"
+  version: "1.0.0"

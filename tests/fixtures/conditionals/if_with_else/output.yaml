@@ -1,0 +1,10 @@
+feature_mode: 'feature enabled'  # FEATURE_ENABLED=true -> then
+database_config:  # USE_POSTGRES not set -> else
+  driver: 'sqlite'
+  file: 'app.db'
+debug_level: 'verbose'  # DEBUG_MODE=yes -> then
+complex_config:  # ENVIRONMENT=1 -> then
+  mode: 'production'
+  features:
+    - 'monitoring'
+    - 'logging'

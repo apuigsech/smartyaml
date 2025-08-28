@@ -1,0 +1,15 @@
+database_config: !switch
+  var: 'ENVIRONMENT'
+  cases:
+    - case: 'development'
+      host: 'localhost'
+      port: 5432
+      debug: true
+    - case: 'staging'
+      host: 'staging-db.example.com'
+      port: 5432
+      debug: false
+    - case: 'production'
+      host: 'prod-db.example.com'
+      port: 5432
+      debug: false

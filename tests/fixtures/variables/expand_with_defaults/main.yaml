@@ -1,0 +1,7 @@
+__vars:
+  defined_var: "defined_value"
+
+messages:
+  with_defined: !expand "This has {{defined_var}}"
+  with_default: !expand "This has {{undefined_var|'default_value'}}"
+  multiple_defaults: !expand "Values: {{var1|'default1'}} and {{var2|'default2'}}"

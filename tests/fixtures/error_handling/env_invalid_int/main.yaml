@@ -1,0 +1,1 @@
+result: !env_int ['INVALID_INT', 42]

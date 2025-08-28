@@ -1,0 +1,1 @@
+description: "Missing __schema should skip validation gracefully and process normally"

@@ -1,0 +1,24 @@
+# Application-specific properties
+app:
+  type: object
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 100
+    version:
+      type: string
+      pattern: "^\\d+\\.\\d+\\.\\d+$"
+    environment:
+      type: string
+      enum: ["development", "staging", "production"]
+    port:
+      type: integer
+      minimum: 1024
+      maximum: 65535
+    features:
+      type: array
+      items:
+        type: string
+      uniqueItems: true
+  required: [name, version, environment, port]

@@ -1,0 +1,13 @@
+# Template data inherited
+template_data:
+  value: "from_template"
+
+# Merged data processed correctly
+combined:
+  template_data:
+    processed: "from_template"
+  main_data:
+    processed: "from_main"
+
+# Environment variable with variable default
+env_with_var: "env_value"

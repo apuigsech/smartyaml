@@ -1,0 +1,29 @@
+# Base Template Example
+# This demonstrates template inheritance using __template
+
+__version: "1.0.0"
+
+__vars:
+  service_name: "base-service"
+  environment: "development"
+  log_level: "INFO"
+  timeout: 30
+
+__template:
+  path: 'templates/base/service_base.yaml'
+  overlay: true
+
+# Service-specific configuration that will overlay the base template
+service:
+  name: !expand "{{service_name}}"
+  environment: !expand "{{environment}}"
+  custom_feature: "enabled"
+
+# Override some base template values
+logging:
+  level: !expand "{{log_level}}"
+  custom_logger: "service-specific"
+
+monitoring:
+  enabled: true
+  service_specific_metrics: true

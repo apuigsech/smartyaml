@@ -1,0 +1,25 @@
+# Test flattened format (recommended) for better readability
+modern_feature: !if
+  var: 'ENABLE_MODERN'
+  then: 'modern feature enabled'
+
+complex_modern: !if
+  var: 'ENABLE_COMPLEX_MODERN'
+  then:
+    service: 'modern-api'
+    port: 8080
+    config:
+      timeout: 30
+      retries: 3
+    features:
+      - 'authentication'
+      - 'authorization'
+      - 'monitoring'
+
+boolean_feature: !if
+  var: 'ENABLE_BOOLEAN'
+  then: true
+
+disabled_feature: !if
+  var: 'DISABLED_FEATURE'
+  then: 'this should not appear'

@@ -1,0 +1,8 @@
+description: "Nested !if directives and !if combined with other directives like !merge"
+
+env_vars:
+  FEATURE_L1: "true"
+  FEATURE_L2: "true" 
+  FEATURE_L3: "true"
+  ENABLE_MERGE: "true"
+  ADD_EXTRA: "true"

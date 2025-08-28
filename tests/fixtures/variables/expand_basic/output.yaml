@@ -1,0 +1,4 @@
+config:
+  description: "Application MyApp version 2.1.0"
+  startup_message: "Starting MyApp in production mode"
+  log_path: "/var/log/MyApp/production.log"

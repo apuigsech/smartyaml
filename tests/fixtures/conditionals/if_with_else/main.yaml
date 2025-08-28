@@ -1,0 +1,34 @@
+# Test !if directive with else clause (flattened format)
+feature_mode: !if
+  var: 'FEATURE_ENABLED'
+  then: 'feature enabled'
+  else: 'feature disabled'
+
+database_config: !if
+  var: 'USE_POSTGRES'
+  then:
+    driver: 'postgresql'
+    host: 'postgres.example.com'
+    port: 5432
+  else:
+    driver: 'sqlite'
+    file: 'app.db'
+
+debug_level: !if
+  var: 'DEBUG_MODE'
+  then: 'verbose'
+  else: 'quiet'
+
+# Test with nested conditions
+complex_config: !if
+  var: 'ENVIRONMENT'
+  then:
+    mode: 'production'
+    features:
+      - 'monitoring'
+      - 'logging'
+  else:
+    mode: 'development'
+    features:
+      - 'debugging'
+      - 'hot_reload'

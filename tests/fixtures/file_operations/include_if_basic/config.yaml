@@ -1,0 +1,5 @@
+description: "!include_if directive includes file when condition is true, null when false"
+
+env_vars:
+  INCLUDE_FEATURES: "true"
+  # INCLUDE_OPTIONAL intentionally not set

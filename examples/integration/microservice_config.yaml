@@ -1,0 +1,419 @@
+# Complete Microservice Configuration
+# Demonstrates a real-world microservice configuration using multiple SmartYAML features
+
+__version: "1.0.0"
+
+__vars:
+  # Service identification
+  service_name: "user-management-api"
+  service_version: !env ['SERVICE_VERSION', '1.0.0']
+  environment: !env ['ENVIRONMENT', 'development']
+  region: !env ['AWS_REGION', 'us-east-1']
+
+  # Derived variables
+  service_prefix: !expand "{{service_name}}-{{environment}}"
+  service_id: !expand "{{service_prefix}}-{{service_version}}"
+
+  # Environment-specific domains
+  domain: !switch ['environment']
+    - case: 'production'
+      "api.example.com"
+    - case: 'staging'
+      "staging-api.example.com"
+    - default: 'development'
+      "dev-api.example.com"
+
+# Use base microservice template
+__template:
+  use: 'services.microservice'
+  overlay: true
+
+# JSON Schema validation
+__schema:
+  type: object
+  properties:
+    service:
+      type: object
+      properties:
+        name: {type: string}
+        version: {type: string}
+        environment: {type: string}
+      required: [name, version, environment]
+    database:
+      type: object
+      properties:
+        connection: {type: object}
+        pool: {type: object}
+      required: [connection]
+    api:
+      type: object
+      properties:
+        endpoints: {type: array}
+        middleware: {type: array}
+      required: [endpoints, middleware]
+  required: [service, database, api]
+
+# Service configuration
+service: !merge
+  - # Base service info
+    name: !expand "{{service_name}}"
+    version: !expand "{{service_version}}"
+    environment: !expand "{{environment}}"
+    region: !expand "{{region}}"
+    service_id: !expand "{{service_id}}"
+
+  - # Environment-specific overrides
+    !switch ['environment']
+      - case: 'production'
+        replicas: !env_int ['REPLICAS', 5]
+        resources:
+          cpu: "1000m"
+          memory: "1Gi"
+        auto_scaling:
+          enabled: true
+          min_replicas: 3
+          max_replicas: 10
+          target_cpu: 70
+
+      - case: 'staging'
+        replicas: !env_int ['REPLICAS', 2]
+        resources:
+          cpu: "500m"
+          memory: "512Mi"
+        auto_scaling:
+          enabled: false
+
+      - default: 'development'
+        replicas: 1
+        resources:
+          cpu: "250m"
+          memory: "256Mi"
+        development_features:
+          hot_reload: true
+          debug_mode: true
+
+# Database configuration with merging
+database: !merge
+  - !include 'file_operations/configs/database.yaml'
+  - # Service-specific overrides
+    connection:
+      database: !expand "{{service_name}}_{{environment}}_db"
+      application_name: !expand "{{service_id}}"
+
+    # Environment-specific pool settings
+    pool: !switch ['environment']
+      - case: 'production'
+        size: !env_int ['DB_POOL_SIZE', 50]
+        max_overflow: 20
+        timeout: 60
+      - case: 'staging'
+        size: !env_int ['DB_POOL_SIZE', 20]
+        max_overflow: 10
+        timeout: 30
+      - default: 'development'
+        size: 5
+        max_overflow: 5
+        timeout: 10
+
+# API configuration with dynamic endpoints
+api:
+  # Base API settings
+  host: !env ['API_HOST', '0.0.0.0']
+  port: !env_int ['API_PORT', 8080]
+  base_url: !expand "https://{{domain}}"
+
+  # Build middleware stack
+  middleware: !concat
+    - # Security middleware (always first)
+      - "cors"
+      - "helmet"
+      - "rate-limiter"
+
+    - # Authentication (conditional)
+      !if ['ENABLE_AUTH']
+        - "passport"
+        - "jwt-validator"
+        - "session-manager"
+
+    - # Environment-specific middleware
+      !switch ['environment']
+        - case: 'production'
+          - "ddos-protection"
+          - "request-logger"
+        - case: 'development'
+          - "dev-logger"
+          - "hot-reload"
+
+    - # Feature-based middleware
+      - !if ['ENABLE_METRICS', "prometheus-metrics"]
+      - !if ['ENABLE_TRACING', "jaeger-tracing"]
+
+    - # Core middleware (always last)
+      - "body-parser"
+      - "error-handler"
+      - "router"
+
+  # Dynamic endpoint configuration
+  endpoints: !concat
+    - # Health and status endpoints
+      - path: "/health"
+        method: "GET"
+        handler: "health_check"
+        public: true
+      - path: "/health/live"
+        method: "GET"
+        handler: "liveness_check"
+        public: true
+      - path: "/health/ready"
+        method: "GET"
+        handler: "readiness_check"
+        public: true
+      - path: "/version"
+        method: "GET"
+        handler: "version_info"
+        public: true
+
+    - # User management endpoints
+      - path: "/users"
+        method: "GET"
+        handler: "list_users"
+        middleware: ["auth_required"]
+      - path: "/users"
+        method: "POST"
+        handler: "create_user"
+        middleware: ["auth_required", "validate_user"]
+      - path: "/users/:id"
+        method: "GET"
+        handler: "get_user"
+        middleware: ["auth_required", "user_access"]
+      - path: "/users/:id"
+        method: "PUT"
+        handler: "update_user"
+        middleware: ["auth_required", "user_access", "validate_user"]
+      - path: "/users/:id"
+        method: "DELETE"
+        handler: "delete_user"
+        middleware: ["auth_required", "admin_required"]
+
+    - # Admin endpoints (conditional)
+      !if ['ADMIN_FEATURES']
+        - path: "/admin/users"
+          method: "GET"
+          handler: "admin_list_users"
+          middleware: ["auth_required", "admin_required"]
+        - path: "/admin/system/status"
+          method: "GET"
+          handler: "system_status"
+          middleware: ["auth_required", "admin_required"]
+        - path: "/admin/system/metrics"
+          method: "GET"
+          handler: "system_metrics"
+          middleware: ["auth_required", "admin_required"]
+
+    - # Analytics endpoints (conditional)
+      !if ['ENABLE_ANALYTICS']
+        - path: "/analytics/events"
+          method: "POST"
+          handler: "track_event"
+          middleware: ["auth_required"]
+        - path: "/analytics/dashboard"
+          method: "GET"
+          handler: "analytics_dashboard"
+          middleware: ["auth_required", "analytics_access"]
+
+# Monitoring and observability
+monitoring: !merge
+  - # Base monitoring configuration
+    enabled: !env_bool ['MONITORING_ENABLED', true]
+    service_name: !expand "{{service_id}}"
+
+    # Metrics configuration
+    metrics:
+      enabled: !env_bool ['METRICS_ENABLED', true]
+      port: !env_int ['METRICS_PORT', 9090]
+      path: "/metrics"
+
+      # Custom metrics
+      custom_metrics:
+        - name: !expand "{{service_name}}_requests_total"
+          type: "counter"
+          help: "Total number of requests"
+        - name: !expand "{{service_name}}_request_duration_seconds"
+          type: "histogram"
+          help: "Request duration in seconds"
+        - name: !expand "{{service_name}}_active_connections"
+          type: "gauge"
+          help: "Active database connections"
+
+  - # Environment-specific monitoring
+    !switch ['environment']
+      - case: 'production'
+        alerting:
+          enabled: true
+          channels: ["pagerduty", "slack"]
+          rules:
+            - name: "high_error_rate"
+              condition: "error_rate > 0.05"
+              duration: "5m"
+            - name: "high_latency"
+              condition: "p95_latency > 1000ms"
+              duration: "10m"
+
+        tracing:
+          enabled: !env_bool ['TRACING_ENABLED', true]
+          sampling_rate: !env_float ['TRACING_SAMPLE_RATE', 0.1]
+          service_name: !expand "{{service_id}}"
+
+      - case: 'staging'
+        alerting:
+          enabled: true
+          channels: ["slack"]
+
+        tracing:
+          enabled: true
+          sampling_rate: 0.5
+
+      - default: 'development'
+        tracing:
+          enabled: true
+          sampling_rate: 1.0
+
+# External services and dependencies
+external_services: !merge
+  - # Always required services
+    required:
+      - name: "database"
+        type: "postgresql"
+        health_check: "/health"
+        timeout: 30
+
+      - name: "redis"
+        type: "cache"
+        health_check: "ping"
+        timeout: 5
+
+  - # Conditional services
+    optional:
+      - !if ['ENABLE_EMAIL']
+          name: "email_service"
+          type: "smtp"
+          provider: !env ['EMAIL_PROVIDER', 'sendgrid']
+          health_check: "/health"
+
+      - !if ['ENABLE_QUEUE']
+          name: "message_queue"
+          type: "rabbitmq"
+          health_check: "/health"
+
+      - !if ['ENABLE_SEARCH']
+          name: "elasticsearch"
+          type: "search"
+          health_check: "/_cluster/health"
+
+# Security configuration
+security: !merge
+  - # Base security settings
+    authentication:
+      enabled: !env_bool ['AUTH_ENABLED', true]
+      provider: !env ['AUTH_PROVIDER', 'jwt']
+
+      jwt:
+        secret: !secret ['JWT_SECRET', 'dev-secret-change-me']
+        expiration: !env_int ['JWT_EXPIRATION', 3600]
+        issuer: !expand "{{service_id}}"
+
+    authorization:
+      enabled: !env_bool ['AUTHZ_ENABLED', true]
+      default_role: "user"
+      admin_role: "admin"
+
+    cors:
+      enabled: !env_bool ['CORS_ENABLED', true]
+      origins: !concat
+        - !switch ['environment']
+          - case: 'production'
+            - "https://app.example.com"
+            - "https://admin.example.com"
+          - case: 'staging'
+            - "https://staging.example.com"
+            - "https://staging-admin.example.com"
+          - default: 'development'
+            - "http://localhost:3000"
+            - "http://localhost:3001"
+        - !if ['ADDITIONAL_ORIGINS', !env ['ADDITIONAL_ORIGINS', '']]
+
+  - # Environment-specific security
+    !switch ['environment']
+      - case: 'production'
+        tls:
+          enabled: true
+          cert_path: "/etc/ssl/certs/service.crt"
+          key_path: "/etc/ssl/private/service.key"
+
+        rate_limiting:
+          enabled: true
+          requests_per_minute: !env_int ['RATE_LIMIT', 1000]
+          burst_limit: !env_int ['BURST_LIMIT', 100]
+
+        security_headers:
+          enabled: true
+          hsts: true
+          csp: "default-src 'self'"
+
+      - default: 'non-production'
+        tls:
+          enabled: false
+
+        rate_limiting:
+          enabled: false
+
+# Deployment configuration
+deployment: !switch ['DEPLOYMENT_PLATFORM']
+  - case: 'kubernetes'
+    platform: "k8s"
+    namespace: !expand "{{service_prefix}}"
+
+    resources:
+      requests: !expand "{{service.resources}}"
+      limits: !expand "{{service.resources}}"
+
+    ingress:
+      enabled: true
+      host: !expand "{{domain}}"
+      tls: !env_bool ['TLS_ENABLED', true]
+      annotations:
+        kubernetes.io/ingress.class: "nginx"
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+    service_account: !expand "{{service_prefix}}-sa"
+
+    config_maps:
+      - name: !expand "{{service_prefix}}-config"
+        data:
+          environment: !expand "{{environment}}"
+          service_name: !expand "{{service_name}}"
+          log_level: !env ['LOG_LEVEL', 'INFO']
+
+  - case: 'docker'
+    platform: "docker"
+    image: !expand "{{service_name}}:{{service_version}}"
+
+    ports:
+      - !expand "{{api.port}}:{{api.port}}"
+      - !expand "{{monitoring.metrics.port}}:{{monitoring.metrics.port}}"
+
+    volumes:
+      - "/var/log:/app/logs"
+      - "/etc/ssl:/app/ssl:ro"
+
+    environment:
+      - !expand "SERVICE_NAME={{service_name}}"
+      - !expand "SERVICE_VERSION={{service_version}}"
+      - !expand "ENVIRONMENT={{environment}}"
+
+  - default: 'standalone'
+    platform: "host"
+    user: "app"
+    working_directory: !expand "/opt/{{service_name}}"
+    pid_file: !expand "/var/run/{{service_name}}.pid"
+    log_file: !expand "/var/log/{{service_name}}/app.log"

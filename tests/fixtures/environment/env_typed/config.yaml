@@ -1,0 +1,12 @@
+description: "Typed environment variables - tests !env_int, !env_float, !env_bool with various values"
+
+env_vars:
+  PORT: "8080"
+  NEGATIVE: "-42"
+  PI: "3.14159"
+  INTEGER: "42"
+  TRUE_VAR: "true"
+  FALSE_VAR: "false"
+  YES_VAR: "yes"
+  NO_VAR: "no"
+  # MISSING_INT, MISSING_FLOAT, MISSING_BOOL intentionally not set

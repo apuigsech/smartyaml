@@ -1,0 +1,10 @@
+__vars:
+  app_name: "MyApp"
+  version: "1.0.0"
+  environment: "production"
+
+config:
+  name: "{{app_name}}"
+  version: "{{version}}"
+  env: "{{environment}}"
+  description: !expand "Application {{app_name}} v{{version}} in {{environment}}"

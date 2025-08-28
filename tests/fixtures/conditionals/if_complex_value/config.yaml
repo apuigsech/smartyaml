@@ -1,0 +1,5 @@
+description: "!if directive with complex objects and arrays as conditional values"
+
+env_vars:
+  ENABLE_COMPLEX: "true"
+  ENABLE_ARRAY: "true"

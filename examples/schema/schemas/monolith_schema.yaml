@@ -1,0 +1,33 @@
+# Monolithic deployment schema
+properties:
+  deployment:
+    type: object
+    properties:
+      type:
+        const: "monolith"
+      server:
+        type: object
+        properties:
+          host:
+            type: string
+          port:
+            type: integer
+            minimum: 80
+            maximum: 65535
+          workers:
+            type: integer
+            minimum: 1
+            maximum: 32
+        required: [host, port]
+      resources:
+        type: object
+        properties:
+          max_memory:
+            type: string
+            pattern: "^\\d+[GM]B$"
+          disk_space:
+            type: string  
+            pattern: "^\\d+[GM]B$"
+        required: [max_memory]
+    required: [type, server]
+required: [deployment]

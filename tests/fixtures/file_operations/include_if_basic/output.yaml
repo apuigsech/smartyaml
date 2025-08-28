@@ -1,0 +1,11 @@
+base_config:
+  name: "BaseApp"
+  version: "1.0"
+
+additional_features:
+  features:
+    auth: true
+    logging: "enabled"
+    monitoring: false
+
+optional_config: null

@@ -1,0 +1,7 @@
+__vars:
+  defined_var: "I exist"
+
+messages:
+  defined: !expand "This works: {{defined_var}}"
+  undefined: !expand "This should remain: {{undefined_var}}"
+  mixed: !expand "Mixed: {{defined_var}} and {{missing_var}}"

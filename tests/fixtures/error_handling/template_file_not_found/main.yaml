@@ -1,0 +1,4 @@
+__template:
+  path: 'nonexistent_template.yaml'
+
+data: "test"

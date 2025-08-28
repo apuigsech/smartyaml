@@ -1,0 +1,9 @@
+base_config:
+  name: "BaseApp"
+  version: "1.0"
+
+# Include conditionally based on environment variable
+additional_features: !include_if ['INCLUDE_FEATURES', 'conditional_config.yaml']
+
+# This should not be included
+optional_config: !include_if ['INCLUDE_OPTIONAL', 'missing_file.yaml']

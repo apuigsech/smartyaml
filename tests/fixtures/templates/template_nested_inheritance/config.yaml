@@ -1,0 +1,5 @@
+description: "Nested template inheritance - template that loads a template that loads another template (3-level inheritance chain)"
+environment: {}
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_nested_inheritance/templates"
+  base_path: "."

@@ -1,0 +1,5 @@
+description: "Test array format for !if directive (backward compatibility)"
+env_vars:
+  ENABLE_LEGACY: "true"
+  ENABLE_COMPLEX_LEGACY: "1"
+  ENABLE_BOOL: "yes"

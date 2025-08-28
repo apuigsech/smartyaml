@@ -1,0 +1,11 @@
+processed_include:
+  database:
+    host: 'localhost'
+    port: 5432
+  features: ['basic', 'advanced']
+
+raw_include:
+  database:
+    host: '!env [''DB_HOST'', ''localhost'']'
+    port: '!env_int [''DB_PORT'', 5432]'
+  features: '!concat [[], []]'

@@ -1,0 +1,4 @@
+# This template references itself, creating infinite recursion
+__template:
+  path: 'recursive_template.yaml'
+recursive_data: "This creates infinite recursion"

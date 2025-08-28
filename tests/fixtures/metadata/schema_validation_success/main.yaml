@@ -1,0 +1,14 @@
+__schema:
+  type: object
+  properties:
+    name:
+      type: string
+    port:
+      type: integer
+    enabled:
+      type: boolean
+  required: [name, port]
+
+name: "TestApp"
+port: 8080
+enabled: true

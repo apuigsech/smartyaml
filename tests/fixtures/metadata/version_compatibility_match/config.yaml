@@ -1,0 +1,1 @@
+description: "__version matches current library version - should process without error"

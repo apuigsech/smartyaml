@@ -1,0 +1,210 @@
+# Array Concatenation Examples
+# Demonstrates the !concat directive for combining arrays
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "concat-demo"
+  base_domains:
+    - "example.com"
+    - "api.example.com"
+
+# Basic array concatenation
+basic_concat: !concat
+  - ["apple", "banana"]
+  - ["cherry", "date"]
+  - ["elderberry"]
+
+# Concatenate with variable expansion
+all_domains: !concat
+  - !expand "{{base_domains}}"
+  - - !expand "{{app_name}}.example.com"
+    - !expand "admin-{{app_name}}.example.com"
+  - !switch ['ENVIRONMENT']
+    - case: 'production'
+      - "prod.example.com"
+      - "cdn.example.com"
+    - case: 'staging'
+      - "staging.example.com"
+      - "staging-cdn.example.com"
+    - default: 'development'
+      - "dev.example.com"
+      - "localhost:3000"
+
+# Middleware stack - order matters
+middleware_stack: !concat
+  - # Core middleware (always first)
+    - "cors"
+    - "helmet"
+    - "compression"
+
+  - # Authentication middleware
+    !if ['ENABLE_AUTH']
+      - "passport"
+      - "session"
+
+  - # Development-specific middleware
+    !if ['DEVELOPMENT']
+      - "morgan"
+      - "dev-logger"
+
+  - # Environment-specific middleware
+    !switch ['ENVIRONMENT']
+      - case: 'production'
+        - "rate-limiter"
+        - "ddos-protection"
+      - case: 'staging'
+        - "request-logger"
+      - default: 'development'
+        - "hot-reload"
+        - "error-handler"
+
+  - # Feature-based middleware
+    - !if ['ENABLE_METRICS', "prometheus"]
+    - !if ['ENABLE_TRACING', "jaeger"]
+
+  - # Core middleware (always last)
+    - "body-parser"
+    - "router"
+
+# API endpoints from multiple sources
+api_endpoints: !concat
+  - # Core endpoints
+    - path: "/health"
+      method: "GET"
+      handler: "health_check"
+    - path: "/version"
+      method: "GET"
+      handler: "version_info"
+
+  - # User management endpoints
+    - path: "/users"
+      method: "GET"
+      handler: "list_users"
+    - path: "/users"
+      method: "POST"
+      handler: "create_user"
+    - path: "/users/:id"
+      method: "GET"
+      handler: "get_user"
+    - path: "/users/:id"
+      method: "PUT"
+      handler: "update_user"
+    - path: "/users/:id"
+      method: "DELETE"
+      handler: "delete_user"
+
+  - # Admin endpoints (conditional)
+    !if ['ADMIN_FEATURES']
+      - path: "/admin/users"
+        method: "GET"
+        handler: "admin_list_users"
+        middleware: ["require_admin"]
+      - path: "/admin/system"
+        method: "GET"
+        handler: "system_status"
+        middleware: ["require_admin"]
+
+  - # Analytics endpoints (conditional)
+    !if ['ENABLE_ANALYTICS']
+      - path: "/analytics/events"
+        method: "POST"
+        handler: "track_event"
+      - path: "/analytics/dashboard"
+        method: "GET"
+        handler: "analytics_dashboard"
+
+# Database migrations - execution order is important
+database_migrations: !concat
+  - # Initial schema
+    - "001_create_users_table.sql"
+    - "002_create_profiles_table.sql"
+    - "003_create_roles_table.sql"
+
+  - # Core features
+    - "004_add_user_roles.sql"
+    - "005_create_sessions_table.sql"
+    - "006_add_user_preferences.sql"
+
+  - # Feature-specific migrations
+    !if ['ENABLE_ANALYTICS']
+      - "007_create_events_table.sql"
+      - "008_create_analytics_views.sql"
+
+  - !if ['ENABLE_MESSAGING']
+      - "009_create_messages_table.sql"
+      - "010_create_conversations_table.sql"
+
+  - # Environment-specific migrations
+    !switch ['ENVIRONMENT']
+      - case: 'production'
+        - "011_add_production_indexes.sql"
+        - "012_add_performance_optimizations.sql"
+      - case: 'staging'
+        - "011_add_staging_test_data.sql"
+      - default: 'development'
+        - "011_add_development_seed_data.sql"
+
+# Security headers configuration
+security_headers: !concat
+  - # Basic security headers
+    - name: "X-Content-Type-Options"
+      value: "nosniff"
+    - name: "X-Frame-Options"
+      value: "DENY"
+    - name: "X-XSS-Protection"
+      value: "1; mode=block"
+
+  - # HTTPS headers for production
+    !if ['SSL_ENABLED']
+      - name: "Strict-Transport-Security"
+        value: "max-age=31536000; includeSubDomains"
+      - name: "Upgrade-Insecure-Requests"
+        value: "1"
+
+  - # Environment-specific headers
+    !switch ['ENVIRONMENT']
+      - case: 'production'
+        - name: "Content-Security-Policy"
+          value: "default-src 'self'; script-src 'self' 'unsafe-inline'"
+        - name: "Referrer-Policy"
+          value: "strict-origin-when-cross-origin"
+      - case: 'development'
+        - name: "Content-Security-Policy"
+          value: "default-src 'self' 'unsafe-inline' 'unsafe-eval'"
+
+# Service dependencies with conditional additions
+service_dependencies: !concat
+  - # Core dependencies
+    - name: "database"
+      type: "postgresql"
+      required: true
+    - name: "cache"
+      type: "redis"
+      required: false
+
+  - # Message queue (conditional)
+    !if ['ENABLE_QUEUE']
+      - name: "message_queue"
+        type: "rabbitmq"
+        required: true
+
+  - # Search engine (conditional)
+    !if ['ENABLE_SEARCH']
+      - name: "search"
+        type: "elasticsearch"
+        required: false
+
+  - # External services based on features
+    - !if ['ENABLE_EMAIL']
+        name: "email_service"
+        type: "smtp"
+        required: false
+    - !if ['ENABLE_SMS']
+        name: "sms_service"
+        type: "twilio"
+        required: false
+    - !if ['ENABLE_PAYMENTS']
+        name: "payment_processor"
+        type: "stripe"
+        required: true

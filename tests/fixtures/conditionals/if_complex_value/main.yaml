@@ -1,0 +1,23 @@
+complex_object: !if
+  var: 'ENABLE_COMPLEX'
+  then:
+    database:
+      host: 'localhost'
+      port: 5432
+      credentials:
+        user: 'admin'
+        password: 'secret'
+    features: ['auth', 'logging', 'monitoring']
+    config:
+      timeout: 30
+      retries: 3
+
+complex_array: !if
+  var: 'ENABLE_ARRAY'
+  then:
+    - service: 'api'
+      port: 8080
+    - service: 'worker'
+      port: 8081
+    - service: 'monitor'
+      port: 8082

@@ -1,0 +1,35 @@
+# Basic Environment Variable Examples
+# Demonstrates various environment variable directives
+
+__version: "1.0.0"
+
+# String environment variables with defaults
+app:
+  name: !env ['APP_NAME', 'MyDefaultApp']
+  environment: !env ['ENVIRONMENT', 'development']
+  log_level: !env ['LOG_LEVEL', 'INFO']
+
+# Database configuration from environment
+database:
+  host: !env ['DB_HOST', 'localhost']
+  username: !env ['DB_USER', 'postgres']
+  password: !secret ['DB_PASSWORD', 'defaultpass123']
+  ssl_mode: !env ['DB_SSL_MODE', 'prefer']
+
+# API configuration
+api:
+  base_url: !env ['API_BASE_URL', 'https://api.example.com']
+  api_key: !secret ['API_KEY', 'dev-key-12345']
+  user_agent: !env ['USER_AGENT', 'SmartYAML/1.0']
+
+# External service URLs
+services:
+  redis_url: !env ['REDIS_URL', 'redis://localhost:6379']
+  memcached_servers: !env ['MEMCACHED_SERVERS', 'localhost:11211']
+  elasticsearch_url: !env ['ELASTICSEARCH_URL', 'http://localhost:9200']
+
+# File paths from environment
+paths:
+  data_dir: !env ['DATA_DIR', '/var/lib/myapp']
+  log_dir: !env ['LOG_DIR', '/var/log/myapp']
+  config_dir: !env ['CONFIG_DIR', '/etc/myapp']

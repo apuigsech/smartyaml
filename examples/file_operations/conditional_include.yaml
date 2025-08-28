@@ -1,0 +1,83 @@
+# Conditional File Inclusion Example
+# Demonstrates conditional file inclusion with !include_if
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "conditional-include-demo"
+  environment: !env ['ENVIRONMENT', 'development']
+
+# Main application configuration
+application:
+  name: !expand "{{app_name}}"
+  environment: !expand "{{environment}}"
+
+  # Always include basic database config
+  database: !include 'file_operations/configs/database.yaml'
+
+# Conditional configuration based on environment variables
+development_config: !include_if ['DEVELOPMENT', 'file_operations/configs/dev_overrides.yaml']
+
+production_config: !include_if ['PRODUCTION', 'file_operations/configs/prod_overrides.yaml']
+
+# Feature-based conditional includes
+features:
+  # Include Redis configuration only if caching is enabled
+  caching: !include_if ['ENABLE_CACHING', 'file_operations/configs/redis_config.yaml']
+
+  # Include monitoring only if enabled
+  monitoring: !include_if ['ENABLE_MONITORING', 'file_operations/configs/monitoring_config.yaml']
+
+  # Include analytics configuration if enabled
+  analytics: !include_if ['ENABLE_ANALYTICS', 'file_operations/configs/analytics_config.yaml']
+
+# Security configuration - only include if security features are enabled
+security:
+  # Basic security settings (always included)
+  basic:
+    csrf_protection: true
+    xss_protection: true
+
+  # Advanced security - only if enabled
+  advanced: !include_if ['ADVANCED_SECURITY', 'file_operations/configs/security_advanced.yaml']
+
+  # Authentication configuration - conditional
+  auth: !include_if ['ENABLE_AUTH', 'file_operations/configs/auth_config.yaml']
+
+# External services - conditional inclusion
+external_services:
+  # Payment processing - only include if payments are enabled
+  payment: !include_if ['ENABLE_PAYMENTS', 'file_operations/configs/payment_config.yaml']
+
+  # Email service - only if notifications are enabled
+  email: !include_if ['ENABLE_EMAIL', 'file_operations/configs/email_config.yaml']
+
+  # SMS service - only if SMS is enabled
+  sms: !include_if ['ENABLE_SMS', 'file_operations/configs/sms_config.yaml']
+
+# Raw YAML inclusion (directives not processed)
+third_party:
+  # Include external service config without processing SmartYAML directives
+  external_api: !include_yaml_if ['USE_EXTERNAL_API', 'file_operations/configs/external_service.yaml']
+
+  # Include legacy configuration without processing
+  legacy_system: !include_yaml_if ['LEGACY_SUPPORT', 'file_operations/configs/legacy_config.yaml']
+
+# Documentation and static content
+documentation:
+  # Always include API documentation
+  api_guide: !include 'file_operations/data/api_guide.md'
+
+  # Include troubleshooting guide only if debug mode is enabled
+  troubleshooting: !include_if ['DEBUG_MODE', 'file_operations/data/troubleshooting.md']
+
+# Database queries - conditional loading
+queries:
+  # Always include basic queries
+  users: !include 'file_operations/sql/get_users.sql'
+
+  # Include admin queries only if admin features are enabled
+  admin_queries: !include_if ['ADMIN_FEATURES', 'file_operations/sql/admin_queries.sql']
+
+  # Include analytics queries only if analytics is enabled
+  analytics_queries: !include_if ['ENABLE_ANALYTICS', 'file_operations/sql/analytics_queries.sql']

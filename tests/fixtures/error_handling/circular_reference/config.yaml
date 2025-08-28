@@ -1,0 +1,3 @@
+expected_error: "VariableNotFoundError"
+description: "Circular variable references should raise VariableNotFoundError when undefined variables are detected"
+environment: {}

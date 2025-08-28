@@ -1,0 +1,14 @@
+app:
+  name: "web-service"
+  version: "2.0.0"
+  port: 8080
+  features:
+    - "analytics"
+
+resources:
+  cpu: "500m"
+  memory: "512Mi"
+
+config:
+  debug: false
+  timeout: 30

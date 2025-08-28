@@ -1,0 +1,5 @@
+description: "Template with overlay mode using use: format - merges template content with main content"
+environment: {}
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_use_overlay/templates"
+  base_path: "."

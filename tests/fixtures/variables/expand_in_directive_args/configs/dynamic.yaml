@@ -1,0 +1,2 @@
+included_data:
+  message: "This was dynamically included"

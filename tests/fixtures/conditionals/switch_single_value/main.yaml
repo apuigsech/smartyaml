@@ -1,0 +1,7 @@
+config: !switch
+  var: 'ENVIRONMENT'
+  cases:
+    - case: 'development'
+      debug: true
+    - case: 'production'
+      debug: false

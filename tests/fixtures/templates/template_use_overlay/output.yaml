@@ -1,0 +1,19 @@
+environment: "production"
+
+database:
+  host: "prod-db.example.com"
+  port: 5432
+  ssl_mode: "require"
+  connection_limit: 100
+
+cache:
+  type: "redis"
+  host: "prod-redis.example.com"
+  port: 6379
+
+logging:
+  level: "warn"
+  output: "file"
+
+monitoring:
+  enabled: true

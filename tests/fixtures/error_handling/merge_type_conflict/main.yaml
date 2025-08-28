@@ -1,0 +1,5 @@
+# Error: merging incompatible types
+result: !merge [
+  {"key1": "string_value"},
+  ["array", "value"]  # Cannot merge dict with array
+]

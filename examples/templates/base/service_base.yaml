@@ -1,0 +1,53 @@
+# Base Service Template
+# This is a template that provides common service configuration
+
+__version: "1.0.0"
+
+__vars:
+  default_timeout: 60
+  default_log_level: "WARN"
+  default_port: 8080
+
+# Common service configuration
+service:
+  type: "microservice"
+  port: !expand "{{default_port}}"
+  timeout: !expand "{{default_timeout}}"
+  health_check:
+    path: "/health"
+    interval: 30
+    timeout: 5
+
+# Default logging configuration
+logging:
+  level: !expand "{{default_log_level}}"
+  format: "json"
+  handlers:
+    - console
+    - file
+  file:
+    path: "/var/log/service.log"
+    max_size: "100MB"
+    rotation: "daily"
+
+# Default monitoring setup
+monitoring:
+  metrics:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+  tracing:
+    enabled: false
+    sampling_rate: 0.1
+
+# Default security settings
+security:
+  auth:
+    enabled: true
+    type: "jwt"
+  cors:
+    enabled: true
+    origins: ["*"]
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 1000

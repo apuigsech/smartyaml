@@ -1,0 +1,3 @@
+description: "!include_if directive returns null when condition is false"
+env_vars: {}
+  # ENABLE_OPTIONAL and ENABLE_DATABASE are intentionally not set (false conditions)

@@ -1,0 +1,29 @@
+# Production environment constraints
+properties:
+  app:
+    properties:
+      port:
+        minimum: 8000
+        maximum: 8999  # Restrict port range in prod
+      debug:
+        type: boolean
+        default: false
+        const: false   # Force debug off in production
+  database:
+    properties:
+      ssl:
+        const: true    # Force SSL in production
+      pool_size:
+        minimum: 10    # Require minimum connections in prod
+      timeout:
+        maximum: 10.0  # Shorter timeout in prod
+  security:
+    type: object
+    properties:
+      encryption:
+        type: boolean
+        const: true
+      audit_logging:
+        type: boolean  
+        const: true
+    required: [encryption, audit_logging]

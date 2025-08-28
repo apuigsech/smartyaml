@@ -1,0 +1,27 @@
+# Base template for all services - the root of the inheritance chain
+app:
+  name: "base-service"
+  type: "service"
+  version: "1.0.0"
+  features:
+    - "logging"
+    - "metrics"
+
+database:
+  host: "localhost"
+  port: 5432
+  name: "base_db"
+  ssl: true
+
+monitoring:
+  enabled: true
+  interval: "30s"
+  alerts: []
+
+resources:
+  cpu: "100m"
+  memory: "128Mi"
+
+config:
+  log_level: "info"
+  timeout: 30

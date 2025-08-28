@@ -1,0 +1,22 @@
+# Test that processing happens in correct order:
+# 1. Template loading
+# 2. Variable resolution 
+# 3. Directive processing
+
+__vars:
+  main_var: "from_main"
+  template_override: "overridden"
+
+__template:
+  path: 'template.yaml'
+  overlay: true
+
+# This tests that variables are resolved BEFORE directives are processed
+combined: !merge
+  - template_data:
+      processed: "{{template_var}}"  # Should be "from_template"
+  - main_data:
+      processed: "{{main_var}}"      # Should be "from_main"
+
+# Test directive processing happens after variable resolution
+env_with_var: !env ['TEST_VAR', "{{main_var}}"]

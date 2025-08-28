@@ -1,0 +1,8 @@
+description: "Integration test combining switch, env, merge, concat, if, and expand directives"
+
+env_vars:
+  DATABASE_TYPE: "postgresql"
+  DB_PORT: "5555"
+  DB_HOST: "db.example.com"
+  APP_ENV: "testing"
+  ENABLE_FEATURES: "true"

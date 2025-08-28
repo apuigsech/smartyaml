@@ -1,0 +1,5 @@
+app:
+  name: "BaseApp"
+  version: "1.0"
+database:
+  host: "localhost"

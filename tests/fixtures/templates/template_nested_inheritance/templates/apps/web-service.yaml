@@ -1,0 +1,18 @@
+# Intermediate template for web services that inherits from base service
+__template:
+  use: 'base.service'
+
+app:
+  type: "web-service"
+  version: "1.5.0"  # Override base version
+  features:
+    - "web-auth"      # Add to base features
+    - "http-routing"  # Add web-specific features
+
+server:
+  port: 8080
+  protocol: "http"
+
+endpoints:
+  health: "/health"
+  metrics: "/metrics"

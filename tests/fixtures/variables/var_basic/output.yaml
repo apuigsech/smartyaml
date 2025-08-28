@@ -1,0 +1,6 @@
+service:
+  name: my-app
+  port: 8080
+  enabled: true
+  rate_limit: 100.5
+  nullable: null

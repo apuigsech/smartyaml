@@ -1,0 +1,3 @@
+expected_error: "DirectiveSyntaxError"
+description: "Merging incompatible types should raise DirectiveSyntaxError when syntax is invalid"
+environment: {}

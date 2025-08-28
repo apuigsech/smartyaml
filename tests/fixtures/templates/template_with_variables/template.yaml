@@ -1,0 +1,7 @@
+__vars:
+  default_port: 8080
+  app_type: "web"
+
+service:
+  type: "{{app_type}}"
+  port: "{{default_port}}"

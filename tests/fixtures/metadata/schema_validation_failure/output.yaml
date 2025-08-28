@@ -1,0 +1,3 @@
+name: "test_service"
+port: 8080
+enabled: true

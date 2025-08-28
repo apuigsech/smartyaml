@@ -1,0 +1,6 @@
+# Error: circular variable references
+__vars:
+  var1: "{{var2}}"
+  var2: "{{var1}}"
+  
+result: "{{var1}}"

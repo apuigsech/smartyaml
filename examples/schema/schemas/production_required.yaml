@@ -1,0 +1,2 @@
+# Production-specific required fields
+required: [app, database, security]

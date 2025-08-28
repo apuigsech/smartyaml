@@ -1,0 +1,4 @@
+description: "Basic switch directive that selects development configuration based on ENVIRONMENT variable"
+
+env_vars:
+  ENVIRONMENT: "development"

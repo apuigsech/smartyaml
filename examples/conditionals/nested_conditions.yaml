@@ -1,0 +1,225 @@
+# Nested Conditional Processing
+# Demonstrates complex nested conditional logic
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "nested-conditions-demo"
+  service_type: "web-api"
+
+# Complex nested conditional configuration
+application:
+  name: !expand "{{app_name}}"
+  type: !expand "{{service_type}}"
+
+  # Environment-specific configuration with nested conditions
+  environment_config: !switch ['ENVIRONMENT']
+    - case: 'production'
+      tier: "production"
+      # Nested condition for production features
+      features: !if ['PRODUCTION_FEATURES']
+        advanced_monitoring: true
+        performance_optimization: true
+        security_hardening: true
+        # Further nested conditions
+        auto_scaling: !if ['ENABLE_AUTO_SCALING']
+          enabled: true
+          min_instances: 3
+          max_instances: 20
+          target_cpu: 70
+          scale_down_cooldown: 300
+
+        backup_strategy: !switch ['BACKUP_STRATEGY']
+          - case: 'comprehensive'
+            frequency: "hourly"
+            retention: "30d"
+            cross_region: true
+            encryption: true
+          - case: 'standard'
+            frequency: "daily"
+            retention: "7d"
+            encryption: true
+          - default: 'basic'
+            frequency: "daily"
+            retention: "3d"
+
+      # Security settings for production
+      security: !if ['ENHANCED_SECURITY']
+        authentication:
+          multi_factor: true
+          session_timeout: 3600
+          password_policy:
+            min_length: 12
+            require_special_chars: true
+
+        # Network security based on deployment type
+        network: !switch ['NETWORK_SETUP']
+          - case: 'vpc'
+            private_subnets: true
+            nat_gateway: true
+            security_groups:
+              - "app-sg"
+              - "db-sg"
+          - case: 'public'
+            public_access: true
+            rate_limiting: true
+          - default: 'basic'
+            basic_firewall: true
+
+    - case: 'staging'
+      tier: "staging"
+      # Staging-specific nested conditions
+      testing: !if ['ENABLE_TESTING']
+        automated_tests: true
+        performance_tests: !if ['PERFORMANCE_TESTS', true]
+        security_scans: !if ['SECURITY_SCANS', true]
+        load_testing: !switch ['LOAD_TEST_TYPE']
+          - case: 'comprehensive'
+            duration: "30m"
+            max_users: 1000
+            ramp_up: "5m"
+          - case: 'basic'
+            duration: "10m"
+            max_users: 100
+            ramp_up: "2m"
+          - default: 'smoke'
+            duration: "2m"
+            max_users: 10
+
+    - case: 'development'
+      tier: "development"
+      # Development-specific nested conditions
+      development_tools: !if ['DEV_TOOLS']
+        hot_reload: true
+        debug_mode: true
+        profiling: !if ['ENABLE_PROFILING', true]
+        testing_utilities: !if ['TESTING_UTILS']
+          mock_services: true
+          test_data_generator: true
+          api_playground: true
+
+    - default: 'development'
+      tier: "development"
+      basic_config: true
+
+# Database configuration with nested conditions
+database: !switch ['DATABASE_ENVIRONMENT']
+  - case: 'production'
+    provider: !switch ['DB_PROVIDER']
+      - case: 'aws'
+        service: "rds"
+        instance_type: !switch ['DB_SIZE']
+          - case: 'large'
+            instance: "db.r5.2xlarge"
+            storage: 1000
+          - case: 'medium'
+            instance: "db.r5.xlarge"
+            storage: 500
+          - default: 'small'
+            instance: "db.r5.large"
+            storage: 100
+
+        # High availability for production
+        high_availability: !if ['HA_ENABLED']
+          multi_az: true
+          read_replicas: !switch ['READ_REPLICA_COUNT']
+            - case: '3'
+              replicas: 3
+              distribution: "cross-az"
+            - case: '2'
+              replicas: 2
+              distribution: "same-region"
+            - default: '1'
+              replicas: 1
+
+          backup: !if ['AUTOMATED_BACKUP']
+            enabled: true
+            retention_period: 30
+            backup_window: "03:00-04:00"
+            maintenance_window: "sun:04:00-sun:05:00"
+
+      - case: 'gcp'
+        service: "cloud-sql"
+        tier: !switch ['DB_SIZE']
+          - case: 'large'
+            machine_type: "db-n1-highmem-4"
+          - case: 'medium'
+            machine_type: "db-n1-highmem-2"
+          - default: 'small'
+            machine_type: "db-n1-standard-1"
+
+      - default: 'postgresql'
+        host: "localhost"
+        port: 5432
+
+  - case: 'staging'
+    provider: "postgresql"
+    host: !env ['STAGING_DB_HOST', 'staging-db.internal']
+    port: 5432
+    # Reduced redundancy for staging
+    backup: !if ['STAGING_BACKUP']
+      enabled: true
+      frequency: "daily"
+      retention: 7
+
+  - default: 'development'
+    provider: "postgresql"
+    host: "localhost"
+    port: 5432
+    # Development database settings
+    development_features: !if ['DB_DEV_FEATURES']
+      query_logging: true
+      migration_auto_run: true
+      seed_data: !if ['SEED_DATA', true]
+
+# Monitoring with complex nested conditions
+monitoring: !if ['ENABLE_MONITORING']
+  # Base monitoring always enabled if monitoring is on
+  basic_metrics: true
+
+  # Advanced monitoring based on tier
+  advanced: !switch ['MONITORING_TIER']
+    - case: 'enterprise'
+      detailed_metrics: true
+      custom_dashboards: true
+
+      # Enterprise-specific alerting
+      alerting: !if ['ADVANCED_ALERTING']
+        channels:
+          - type: "pagerduty"
+            severity_mapping:
+              critical: "P1"
+              warning: "P3"
+          - type: "slack"
+            webhook: !secret ['SLACK_WEBHOOK', '']
+
+          # Email alerting with conditions
+          email: !if ['EMAIL_ALERTS']
+            recipients: !switch ['ALERT_AUDIENCE']
+              - case: 'team'
+                - "team@example.com"
+              - case: 'oncall'
+                - "oncall@example.com"
+              - default: 'admin'
+                - "admin@example.com"
+
+      # Performance monitoring
+      performance: !if ['PERFORMANCE_MONITORING']
+        apm: true
+        profiling: !switch ['PROFILING_MODE']
+          - case: 'continuous'
+            enabled: true
+            sampling_rate: 0.1
+            flame_graphs: true
+          - case: 'triggered'
+            enabled: true
+            trigger_threshold: 0.95
+          - default: 'disabled'
+            enabled: false
+
+    - case: 'standard'
+      basic_alerting: true
+      standard_dashboards: true
+
+    - default: 'basic'
+      health_checks: true

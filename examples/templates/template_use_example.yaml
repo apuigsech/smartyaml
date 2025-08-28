@@ -1,0 +1,34 @@
+# Template Use Example
+# Demonstrates using templates with the 'use' directive
+
+__version: "1.0.0"
+
+__vars:
+  service_name: "user-api"
+  service_type: "web-service"
+  database_type: "postgres"
+
+# Use template by name (from templates directory)
+__template:
+  use: 'services.microservice'  # Loads templates/services/microservice.yaml
+  overlay: true
+
+# Override template values
+service:
+  name: !expand "{{service_name}}"
+  type: !expand "{{service_type}}"
+  port: 3000
+
+# Add database configuration using another template
+database: !template 'databases.postgres'
+
+# Service-specific configuration
+api:
+  version: "v1"
+  endpoints:
+    - "/users"
+    - "/users/{id}"
+    - "/users/{id}/profile"
+  rate_limits:
+    per_user: 100
+    per_ip: 1000

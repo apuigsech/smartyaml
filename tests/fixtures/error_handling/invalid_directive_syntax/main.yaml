@@ -1,0 +1,4 @@
+# Error: invalid directive syntax
+invalid_switch: !switch  # Missing required arguments
+invalid_env: !env  # Missing environment variable name
+invalid_if: !if  # Missing condition and value

@@ -62,11 +62,17 @@ docs = [
 [tool.setuptools]
 packages = [
     "smartyaml", 
-    "smartyaml.constructors", 
-    "smartyaml.loading",
-    "smartyaml.parsing", 
-    "smartyaml.processing", 
-    "smartyaml.utils"
+    "smartyaml.caching",
+    "smartyaml.config",
+    "smartyaml.directives", 
+    "smartyaml.errors",
+    "smartyaml.metadata",
+    "smartyaml.pipeline", 
+    "smartyaml.security",
+    "smartyaml.templates",
+    "smartyaml.utils",
+    "smartyaml.validation",
+    "smartyaml.variables"
 ]
 
 [tool.setuptools.package-data]

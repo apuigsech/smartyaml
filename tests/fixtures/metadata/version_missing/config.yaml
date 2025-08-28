@@ -1,0 +1,1 @@
+description: "Missing __version should assume compatibility and process normally"

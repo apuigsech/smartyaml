@@ -1,0 +1,34 @@
+# Example 4: Advanced Schema Composition with Switch
+# Demonstrates schema selection based on deployment type with complex composition
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "AdvancedApp"
+  app_version: "3.0.0" 
+  deployment_type: !env ['DEPLOYMENT_TYPE', 'microservice']
+
+# Simple schema loading - use core schema in all cases
+__schema: !include_yaml 'schemas/core_schema.yaml'
+
+# Core configuration
+app:
+  name: !var "app_name"
+  version: !var "app_version"
+
+database:
+  host: !env ['DB_HOST', 'db.example.com']
+  port: !env_int ['DB_PORT', 5432]
+  name: !expand "{{app_name}}_prod"
+
+# Simple deployment configuration
+deployment:
+  type: !var "deployment_type"
+  replicas: !env_int ['REPLICAS', 3]
+  resources:
+    cpu: "500m"
+    memory: "512Mi"
+  autoscaling:
+    enabled: true
+    min_replicas: 2
+    max_replicas: 10

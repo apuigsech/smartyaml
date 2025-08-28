@@ -1,0 +1,15 @@
+__vars:
+  database:
+    host: "db.example.com"
+    port: 5432
+    credentials:
+      user: "dbuser"
+      password: "secret123"
+  app:
+    name: "NestedApp"
+    config:
+      timeout: 30
+
+connection_strings:
+  main_db: !expand "postgresql://{{database.credentials.user}}:{{database.credentials.password}}@{{database.host}}:{{database.port}}/{{app.name}}"
+  app_info: !expand "App: {{app.name}}, Timeout: {{app.config.timeout}}s"

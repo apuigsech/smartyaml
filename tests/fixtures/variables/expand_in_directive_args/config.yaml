@@ -1,0 +1,5 @@
+description: "Variable expansion in directive arguments (!env, !include, !switch paths)"
+
+env_vars:
+  DYNAMIC_HOST: "dynamic.example.com"
+  MODE: "production"

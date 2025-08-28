@@ -1,0 +1,4 @@
+# Security: attempt to access forbidden environment variables
+password: !env ['PASSWORD', 'default']
+secret_key: !env ['SECRET_KEY', 'default']
+api_token: !env ['API_TOKEN', 'default']

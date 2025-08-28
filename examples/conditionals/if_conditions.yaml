@@ -1,0 +1,124 @@
+# Conditional Processing with !if
+# Demonstrates conditional inclusion based on environment variables
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "conditional-app"
+  base_url: "example.com"
+
+# Basic conditional configuration
+app:
+  name: !expand "{{app_name}}"
+
+  # Include debug configuration only if DEBUG is set
+  debug_config: !if ['DEBUG']
+    enabled: true
+    log_level: "DEBUG"
+    profiling: true
+    detailed_errors: true
+    development_tools:
+      - hot_reload
+      - source_maps
+      - inspector
+
+  # Include SSL configuration only if SSL_ENABLED is truthy
+  ssl: !if ['SSL_ENABLED']
+    enabled: true
+    cert_path: "/etc/ssl/certs/app.crt"
+    key_path: "/etc/ssl/private/app.key"
+    protocols: ["TLSv1.2", "TLSv1.3"]
+
+  # Production-specific settings
+  production_config: !if ['PRODUCTION']
+    optimization: true
+    minification: true
+    caching: true
+    monitoring:
+      enabled: true
+      detailed_metrics: true
+    security:
+      strict_mode: true
+      csrf_protection: true
+
+# Database configuration with conditional features
+database:
+  host: "localhost"
+  port: 5432
+  name: !expand "{{app_name}}_db"
+
+  # Include connection pooling only if enabled
+  connection_pool: !if ['DB_POOLING_ENABLED']
+    min_connections: 5
+    max_connections: 50
+    pool_timeout: 30
+    pool_recycle: 3600
+
+  # Include backup configuration for production
+  backup: !if ['ENABLE_BACKUPS']
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    retention_days: 30
+    encryption: true
+    compression: true
+
+# Feature flags using conditionals
+features:
+  # Include analytics only if enabled
+  analytics: !if ['ENABLE_ANALYTICS']
+    provider: "google-analytics"
+    tracking_id: "GA-XXXXX-X"
+    anonymize_ip: true
+    cookie_consent: true
+
+  # Include caching layer if enabled
+  caching: !if ['ENABLE_CACHING']
+    provider: "redis"
+    ttl: 3600
+    prefix: !expand "{{app_name}}:cache:"
+    compression: true
+
+  # Include rate limiting in production
+  rate_limiting: !if ['PRODUCTION']
+    enabled: true
+    requests_per_minute: 1000
+    burst_limit: 100
+    whitelist_ips: []
+
+# External services with conditional configuration
+external_services:
+  # Include payment processing if enabled
+  payment: !if ['ENABLE_PAYMENTS']
+    provider: "stripe"
+    webhook_secret: !secret ['STRIPE_WEBHOOK_SECRET', 'dev_secret']
+    currency: "USD"
+    test_mode: !if ['DEVELOPMENT', true]
+
+  # Include email service if notifications enabled
+  email: !if ['ENABLE_EMAIL']
+    provider: "sendgrid"
+    api_key: !secret ['SENDGRID_API_KEY', 'dev_key']
+    from_address: !expand "noreply@{{base_url}}"
+    templates:
+      welcome: "welcome-template"
+      password_reset: "password-reset-template"
+
+# Monitoring and observability
+monitoring: !if ['ENABLE_MONITORING']
+  metrics:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+
+  tracing: !if ['ENABLE_TRACING']
+    enabled: true
+    service_name: !expand "{{app_name}}"
+    sampling_rate: 0.1
+
+  health_checks: !if ['ENABLE_HEALTH_CHECKS']
+    liveness:
+      path: "/health/live"
+      timeout: 5
+    readiness:
+      path: "/health/ready"
+      timeout: 3

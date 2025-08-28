@@ -1,0 +1,6 @@
+description: "Basic !if directive - includes value when env var is truthy, null when falsy"
+
+env_vars:
+  ENABLE_FEATURE: "true"
+  DEBUG: "yes"
+  # DISABLE_FEATURE intentionally not set

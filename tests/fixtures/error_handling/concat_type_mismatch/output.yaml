@@ -1,0 +1,4 @@
+result: 
+  - "item1"
+  - "item2"
+  - "not_an_array"

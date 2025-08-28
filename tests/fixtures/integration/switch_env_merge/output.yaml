@@ -1,0 +1,10 @@
+database:
+  driver: 'postgresql+psycopg2'
+  port: 5555
+  host: 'db.example.com'
+
+config:
+  app:
+    name: "IntegrationApp"
+    environment: 'testing'
+  features: ["logging", "monitoring", "metrics"]

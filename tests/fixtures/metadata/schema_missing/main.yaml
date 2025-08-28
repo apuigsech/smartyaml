@@ -1,0 +1,6 @@
+# No __schema defined - should skip validation
+
+name: "NoSchemaApp"
+arbitrary_field: "any_value"
+nested:
+  data: [1, 2, 3]

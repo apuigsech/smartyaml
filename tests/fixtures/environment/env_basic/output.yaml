@@ -1,0 +1,11 @@
+server:
+  name: 'MyApp'
+  port: 8080
+  debug: true
+  timeout: 45.5
+
+database:
+  host: 'db.example.com'
+  credentials:
+    user: 'myuser'
+    password: 'defaultpass'

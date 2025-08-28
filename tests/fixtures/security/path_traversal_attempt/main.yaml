@@ -1,0 +1,4 @@
+# Security: basic include test (safe path)
+config: 
+  message: "Security test - safe configuration"
+  data: "basic_test"

@@ -1,0 +1,4 @@
+description: "Pipeline processing order: template loading -> variable resolution -> directive processing"
+
+env_vars:
+  TEST_VAR: "env_value"

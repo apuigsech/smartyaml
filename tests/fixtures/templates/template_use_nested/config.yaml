@@ -1,0 +1,5 @@
+description: "Nested template usage with use: format - loads from nested templates directory structure"
+environment: {}
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_use_nested/templates"
+  base_path: "."

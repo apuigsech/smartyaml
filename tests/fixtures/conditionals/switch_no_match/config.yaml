@@ -1,0 +1,4 @@
+description: "Switch directive with no matching case and no default - should return null"
+
+env_vars:
+  MODE: "unknown"

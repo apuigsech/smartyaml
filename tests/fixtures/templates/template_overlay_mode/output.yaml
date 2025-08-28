@@ -1,0 +1,4 @@
+settings:
+  debug: true   # Overridden
+  port: 8080    # Inherited
+  timeout: 30   # Added

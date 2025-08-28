@@ -1,0 +1,2 @@
+description: "Concatenating mixed types - SmartYAML handles gracefully by converting to array"
+environment: {}

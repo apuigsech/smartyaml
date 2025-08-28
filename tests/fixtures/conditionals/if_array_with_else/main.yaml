@@ -1,0 +1,16 @@
+# Test !if directive with else clause using array format
+server_mode: !if ['SERVER_ENABLED', 'server mode', 'client mode']
+
+port_config: !if ['HIGH_PERFORMANCE', 8080, 3000]
+
+log_format: !if ['DETAILED_LOGS', {
+  level: 'debug',
+  format: 'json',
+  timestamp: true
+}, {
+  level: 'info',
+  format: 'simple'
+}]
+
+# Test with boolean values
+secure_mode: !if ['SECURITY_ENABLED', true, false]

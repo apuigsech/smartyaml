@@ -1,0 +1,3 @@
+config:
+  allowed_var: !env ['ALLOWED_VAR', 'allowed_value']
+  public_var: !env ['PUBLIC_VAR', 'public_value']

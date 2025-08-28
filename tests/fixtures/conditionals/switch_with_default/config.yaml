@@ -1,0 +1,4 @@
+description: "Switch directive with default case - tests fallback when no case matches"
+
+env_vars:
+  MODE: "testing"  # This value doesn't match any case, so default should be used

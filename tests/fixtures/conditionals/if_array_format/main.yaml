@@ -1,0 +1,10 @@
+# Test array format (backward compatibility) to ensure compatibility with existing code
+legacy_feature: !if ['ENABLE_LEGACY', 'legacy feature enabled']
+
+complex_legacy: !if ['ENABLE_COMPLEX_LEGACY', {
+  service: 'legacy-api',
+  port: 9090,
+  features: ['authentication', 'logging']
+}]
+
+simple_bool: !if ['ENABLE_BOOL', true]

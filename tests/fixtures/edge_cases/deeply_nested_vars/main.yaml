@@ -1,0 +1,13 @@
+__vars:
+  app:
+    config:
+      database:
+        connection:
+          pool:
+            settings:
+              max_connections: 100
+              timeout: 30
+
+result:
+  deep_value: "{{app.config.database.connection.pool.settings.max_connections}}"
+  timeout_val: "{{app.config.database.connection.pool.settings.timeout}}"

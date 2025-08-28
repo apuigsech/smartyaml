@@ -1,0 +1,18 @@
+features:
+  level1: !if
+    var: 'FEATURE_L1'
+    then:
+      level2: !if
+        var: 'FEATURE_L2'
+        then:
+          level3: !if
+            var: 'FEATURE_L3'
+            then: 'deeply nested feature enabled'
+
+conditional_merge: !if
+  var: 'ENABLE_MERGE'
+  then: !merge
+    - base: 'data'
+    - additional: !if
+        var: 'ADD_EXTRA'
+        then: 'extra_data'

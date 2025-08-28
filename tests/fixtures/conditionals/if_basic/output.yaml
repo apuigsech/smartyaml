@@ -1,0 +1,6 @@
+config:
+  enabled_feature: 'feature is enabled'  # ENABLE_FEATURE=true -> then
+  disabled_feature: 'feature is off'     # DISABLE_FEATURE not set -> else
+  
+database:
+  debug_mode: true  # DEBUG=yes -> then

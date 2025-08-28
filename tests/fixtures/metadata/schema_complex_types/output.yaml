@@ -1,0 +1,8 @@
+tags: ["api", "backend"]
+config:
+  environment: "production"
+  features:
+    - name: "feature_one"
+      enabled: true
+    - name: "feature_two"
+      enabled: false

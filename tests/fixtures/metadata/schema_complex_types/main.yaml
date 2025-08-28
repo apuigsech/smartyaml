@@ -1,0 +1,34 @@
+__schema:
+  type: object
+  properties:
+    tags:
+      type: array
+      items:
+        type: string
+    config:
+      type: object
+      properties:
+        environment:
+          type: string
+          enum: ["development", "staging", "production"]
+        features:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                pattern: "^[a-zA-Z_]+$"
+              enabled:
+                type: boolean
+            required: ["name", "enabled"]
+  required: ["tags", "config"]
+
+tags: ["api", "backend"]
+config:
+  environment: "production"
+  features:
+    - name: "feature_one"
+      enabled: true
+    - name: "feature_two"
+      enabled: false

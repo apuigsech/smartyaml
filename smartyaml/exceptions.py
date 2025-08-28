@@ -1,228 +1,227 @@
 """
-SmartYAML exceptions
+SmartYAML Exception Hierarchy
+
+All custom exceptions for SmartYAML processing as defined in SPECS-v1.md.
 """
 
-from typing import Optional
-
-import yaml
+from typing import Any, List, Optional
 
 
 class SmartYAMLError(Exception):
-    """Base exception for SmartYAML errors."""
-
-
-class SmartYAMLFileNotFoundError(SmartYAMLError):
-    """Raised when a referenced file cannot be found."""
-
-
-class InvalidPathError(SmartYAMLError):
-    """Raised when an invalid or unsafe path is provided."""
-
-
-class EnvironmentVariableError(SmartYAMLError):
-    """Raised when an environment variable is not found and no default is provided."""
-
-
-class TemplatePathError(SmartYAMLError):
-    """Raised when SMARTYAML_TMPL is not set or invalid."""
-
-
-class Base64Error(SmartYAMLError):
-    """Raised when base64 encoding/decoding fails."""
-
-
-class ResourceLimitError(SmartYAMLError):
-    """Raised when resource limits are exceeded."""
-
-
-class RecursionLimitError(SmartYAMLError):
-    """Raised when import recursion depth is exceeded."""
-
-
-class ConstructorError(SmartYAMLError):
-    """
-    Enhanced constructor error with context and location information.
-
-    This exception provides detailed error context for constructor failures,
-    including directive names, parameter information, and YAML location data.
-    """
+    """Base exception for all SmartYAML errors."""
 
     def __init__(
         self,
-        directive_name: Optional[str] = None,
-        parameter_name: Optional[str] = None,
-        message: str = "",
-        location: Optional[yaml.Mark] = None,
-    ):
-        """
-        Initialize constructor error with enhanced context.
-
-        Args:
-            directive_name: The SmartYAML directive that failed (e.g., '!import')
-            parameter_name: The specific parameter that caused the error
-            message: The error message
-            location: YAML location where the error occurred
-        """
-        self.directive_name = directive_name
-        self.parameter_name = parameter_name
-        self.location = location
-
-        # Build enhanced message
-        enhanced_message = self._build_message(
-            directive_name, parameter_name, message, location
-        )
-        super().__init__(enhanced_message)
-
-    def _build_message(
-        self,
-        directive_name: Optional[str],
-        parameter_name: Optional[str],
         message: str,
-        location: Optional[yaml.Mark],
-    ) -> str:
-        """Build an enhanced error message with context information."""
-        parts = []
+        file_path: Optional[str] = None,
+        field_path: Optional[str] = None,
+        context: Optional[dict] = None,
+    ):
+        super().__init__(message)
+        self.file_path = file_path
+        self.field_path = field_path
+        self.context = context or {}
 
-        if directive_name:
-            parts.append(f"[{directive_name}]")
-
-        if parameter_name:
-            parts.append(f"parameter '{parameter_name}'")
-
-        if parts:
-            prefix = " ".join(parts) + ": "
-        else:
-            prefix = ""
-
-        result = prefix + message
-
-        if location and hasattr(location, "line"):
-            result += f" (line {location.line + 1}, column {location.column + 1})"
-
-        return result
+    def __str__(self) -> str:
+        msg = super().__str__()
+        if self.file_path:
+            msg = f"{msg} (in file: {self.file_path})"
+        if self.field_path:
+            msg = f"{msg} (at field: {self.field_path})"
+        return msg
 
 
-class ErrorMessages:
-    """Standardized error message templates for consistent error reporting."""
+class VersionMismatchError(SmartYAMLError):
+    """Raised when __version requires a higher library version."""
 
-    REQUIRED_PARAMETER = "Required parameter '{param}' is missing"
-    INVALID_PARAMETER_TYPE = (
-        "Parameter '{param}' must be {expected_type}, got {actual_type}"
-    )
-    INVALID_PARAMETER_VALUE = "Invalid value for parameter '{param}': {reason}"
-    PARAMETER_VALIDATION_FAILED = "Parameter '{param}' validation failed - {details}"
-
-    FILE_NOT_FOUND = "Cannot access file '{filepath}': {reason}"
-    FILE_READ_ERROR = "Failed to read file '{filepath}': {reason}"
-    FILE_PARSE_ERROR = "Failed to parse file '{filepath}': {reason}"
-
-    ENVIRONMENT_VAR_NOT_FOUND = (
-        "Environment variable '{var_name}' not found and no default provided"
-    )
-    ENVIRONMENT_VAR_INVALID = (
-        "Environment variable '{var_name}' has invalid value: {reason}"
-    )
-
-    RECURSION_LIMIT_EXCEEDED = (
-        "Maximum recursion depth ({limit}) exceeded. Import chain: {chain}"
-    )
-    RESOURCE_LIMIT_EXCEEDED = "Resource limit exceeded - {details}"
-
-    ENCODING_FAILED = "{operation} failed - {details}"
-    TEMPLATE_ERROR = "Template processing failed: {details}"
-    CONDITION_EVALUATION_FAILED = "Condition evaluation failed: {details}"
-
-
-class ErrorFactory:
-    """Factory for creating standardized errors with consistent formatting."""
-
-    @staticmethod
-    def parameter_required(
-        directive_name: str, param_name: str, location: Optional[yaml.Mark] = None
-    ) -> ConstructorError:
-        """Create error for missing required parameter."""
-        message = ErrorMessages.REQUIRED_PARAMETER.format(param=param_name)
-        return ConstructorError(directive_name, param_name, message, location)
-
-    @staticmethod
-    def parameter_type_mismatch(
-        directive_name: str,
-        param_name: str,
-        expected_type: type,
-        actual_type: type,
-        location: Optional[yaml.Mark] = None,
-    ) -> ConstructorError:
-        """Create error for parameter type mismatch."""
-        message = ErrorMessages.INVALID_PARAMETER_TYPE.format(
-            param=param_name,
-            expected_type=expected_type.__name__,
-            actual_type=actual_type.__name__,
+    def __init__(
+        self,
+        required_version: str,
+        current_version: str,
+        file_path: Optional[str] = None,
+    ):
+        message = (
+            f"Config requires SmartYAML version {required_version}, "
+            f"but library version is {current_version}"
         )
-        return ConstructorError(directive_name, param_name, message, location)
+        super().__init__(message, file_path)
+        self.required_version = required_version
+        self.current_version = current_version
 
-    @staticmethod
-    def parameter_validation_failed(
-        directive_name: str,
-        param_name: str,
-        details: str,
-        location: Optional[yaml.Mark] = None,
-    ) -> ConstructorError:
-        """Create error for parameter validation failure."""
-        message = ErrorMessages.PARAMETER_VALIDATION_FAILED.format(
-            param=param_name, details=details
-        )
-        return ConstructorError(directive_name, param_name, message, location)
 
-    @staticmethod
-    def file_not_found(
-        directive_name: str, filepath: str, reason: str = "File not found"
-    ) -> SmartYAMLFileNotFoundError:
-        """Create error for file access issues."""
-        message = ErrorMessages.FILE_NOT_FOUND.format(filepath=filepath, reason=reason)
-        error = SmartYAMLFileNotFoundError(message)
-        error.directive_name = directive_name
-        error.filepath = filepath
-        return error
+class FileNotFoundError(SmartYAMLError):
+    """Raised when a file referenced in directives doesn't exist."""
 
-    @staticmethod
-    def environment_variable_error(
-        directive_name: str, var_name: str, reason: str = "not found"
-    ) -> EnvironmentVariableError:
-        """Create error for environment variable issues."""
-        if reason == "not found":
-            message = ErrorMessages.ENVIRONMENT_VAR_NOT_FOUND.format(var_name=var_name)
+    def __init__(
+        self,
+        file_path: str,
+        base_path: Optional[str] = None,
+        directive: Optional[str] = None,
+    ):
+        if base_path:
+            message = f"File '{file_path}' not found relative to '{base_path}'"
         else:
-            message = ErrorMessages.ENVIRONMENT_VAR_INVALID.format(
-                var_name=var_name, reason=reason
+            message = f"File '{file_path}' not found"
+
+        if directive:
+            message = f"{message} (in {directive} directive)"
+
+        super().__init__(message)
+        self.missing_file_path = file_path
+        self.base_path = base_path
+        self.directive = directive
+
+
+class RecursionLimitExceededError(SmartYAMLError):
+    """Raised when recursion depth exceeds limit."""
+
+    def __init__(
+        self,
+        max_depth: int,
+        operation: str = "processing",
+        file_path: Optional[str] = None,
+        field_path: Optional[str] = None,
+    ):
+        message = f"Recursion limit exceeded (max: {max_depth}) during {operation}"
+        super().__init__(message, file_path, field_path)
+        self.max_depth = max_depth
+        self.operation = operation
+
+
+class VariableNotFoundError(SmartYAMLError):
+    """Raised when a variable reference cannot be resolved."""
+
+    def __init__(
+        self,
+        variable_name: str,
+        context_path: Optional[str] = None,
+        file_path: Optional[str] = None,
+    ):
+        message = f"Undefined variable '{variable_name}'"
+        if context_path:
+            message = f"{message} in '{context_path}'"
+        super().__init__(message, file_path)
+        self.variable_name = variable_name
+
+
+class DirectiveSyntaxError(SmartYAMLError):
+    """Raised for invalid directive syntax."""
+
+    def __init__(
+        self,
+        directive: str,
+        expected_format: str,
+        received: Any,
+        file_path: Optional[str] = None,
+        field_path: Optional[str] = None,
+    ):
+        message = f"Invalid syntax for {directive}: expected {expected_format}, got {type(received).__name__}"
+        super().__init__(message, file_path, field_path)
+        self.directive = directive
+        self.expected_format = expected_format
+        self.received = received
+
+
+class DirectiveProcessingError(SmartYAMLError):
+    """Raised when directive processing fails (e.g., type conversion errors)."""
+
+    def __init__(
+        self,
+        directive: str,
+        reason: str,
+        value: Any = None,
+        file_path: Optional[str] = None,
+        field_path: Optional[str] = None,
+    ):
+        if value is not None:
+            message = f"Failed to process !{directive}: cannot convert '{value}' to expected type - {reason}"
+        else:
+            message = f"Failed to process !{directive}: {reason}"
+        super().__init__(message, file_path, field_path)
+        self.directive = directive
+        self.reason = reason
+        self.value = value
+
+
+class MergeConflictError(SmartYAMLError):
+    """Raised when !merge encounters unresolvable conflicts."""
+
+    def __init__(
+        self, field_path: str, type1: str, type2: str, file_path: Optional[str] = None
+    ):
+        message = (
+            f"Cannot merge incompatible types at '{field_path}': {type1} and {type2}"
+        )
+        super().__init__(message, file_path, field_path)
+        self.type1 = type1
+        self.type2 = type2
+
+
+class ConditionalEvaluationError(SmartYAMLError):
+    """Raised for errors in conditional directives."""
+
+    def __init__(
+        self,
+        directive: str,
+        condition: str,
+        reason: str,
+        file_path: Optional[str] = None,
+        field_path: Optional[str] = None,
+    ):
+        message = f"Failed to evaluate condition for {directive}: {reason}"
+        super().__init__(message, file_path, field_path)
+        self.directive = directive
+        self.condition = condition
+        self.reason = reason
+
+
+class SchemaValidationError(SmartYAMLError):
+    """Raised when schema validation fails."""
+
+    def __init__(self, errors: List[str], file_path: Optional[str] = None):
+        if len(errors) == 1:
+            message = f"Schema validation failed: {errors[0]}"
+        else:
+            message = (
+                f"Schema validation failed with {len(errors)} errors:\n"
+                + "\n".join(f"  - {err}" for err in errors)
             )
 
-        error = EnvironmentVariableError(message)
-        error.directive_name = directive_name
-        error.var_name = var_name
-        return error
+        super().__init__(message, file_path)
+        self.validation_errors = errors
 
-    @staticmethod
-    def recursion_limit_exceeded(
-        directive_name: str, limit: int, import_chain: str
-    ) -> RecursionLimitError:
-        """Create error for recursion limit exceeded."""
-        message = ErrorMessages.RECURSION_LIMIT_EXCEEDED.format(
-            limit=limit, chain=import_chain
-        )
-        error = RecursionLimitError(message)
-        error.directive_name = directive_name
-        error.recursion_limit = limit
-        return error
 
-    @staticmethod
-    def encoding_error(
-        directive_name: str, operation: str, details: str
-    ) -> Base64Error:
-        """Create error for encoding/decoding failures."""
-        message = ErrorMessages.ENCODING_FAILED.format(
-            operation=operation, details=details
+class SecurityViolationError(SmartYAMLError):
+    """Raised for security violations."""
+
+    def __init__(
+        self, violation_type: str, details: str, file_path: Optional[str] = None
+    ):
+        message = f"Security violation ({violation_type}): {details}"
+        super().__init__(message, file_path)
+        self.violation_type = violation_type
+
+
+class FileSizeExceededError(SmartYAMLError):
+    """Raised when a file exceeds maximum size limit."""
+
+    def __init__(self, file_path: str, file_size: int, max_size: int):
+        message = (
+            f"File '{file_path}' exceeds max size ({file_size} > {max_size} bytes)"
         )
-        error = Base64Error(message)
-        error.directive_name = directive_name
-        error.operation = operation
-        return error
+        super().__init__(message, file_path)
+        self.file_size = file_size
+        self.max_size = max_size
+
+
+class VariableExpansionError(SmartYAMLError):
+    """Raised when variable expansion fails."""
+
+    def __init__(
+        self, variable_name: str, reason: str, file_path: Optional[str] = None
+    ):
+        self.variable_name = variable_name
+        self.reason = reason
+
+        message = f"Variable expansion failed for '{{{{ {variable_name} }}}}': {reason}"
+        super().__init__(message, file_path, f"{{{{ {variable_name} }}}}")

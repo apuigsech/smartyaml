@@ -1,0 +1,12 @@
+server:
+  name: !env ['APP_NAME', 'default-app']
+  port: !env_int ['PORT', 3000]
+  debug: !env_bool ['DEBUG', false]
+  timeout: !env_float ['TIMEOUT', 30.0]
+
+database:
+  host: !env ['DB_HOST', 'localhost']
+  credentials:
+    user: !env ['DB_USER', 'admin']
+    # This env var doesn't exist, should use default
+    password: !env ['DB_PASSWORD', 'defaultpass']

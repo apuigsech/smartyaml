@@ -1,0 +1,9 @@
+app:
+  name: "MyApp"
+  version: "1.0"
+
+# This should evaluate to false and return null, not including the file
+optional_config: !include_if ['ENABLE_OPTIONAL', 'optional.yaml']
+
+# This should also evaluate to false
+database_config: !include_if ['ENABLE_DATABASE', 'database.yaml']

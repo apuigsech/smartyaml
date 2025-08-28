@@ -1,0 +1,41 @@
+# Serverless deployment schema
+properties:
+  deployment:
+    type: object
+    properties:
+      type:
+        const: "serverless"
+      runtime:
+        type: string
+        enum: ["nodejs18", "python3.9", "go1.19", "java11"]
+      memory:
+        type: integer
+        minimum: 128
+        maximum: 10240
+        multipleOf: 64
+      timeout:
+        type: integer
+        minimum: 1
+        maximum: 900
+      environment:
+        type: object
+        properties:
+          variables:
+            type: object
+            patternProperties:
+              "^[A-Z_][A-Z0-9_]*$":
+                type: string
+      triggers:
+        type: array
+        items:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: ["http", "schedule", "queue", "stream"]
+            config:
+              type: object
+          required: [type]
+        minItems: 1
+    required: [type, runtime, memory, triggers]
+required: [deployment]

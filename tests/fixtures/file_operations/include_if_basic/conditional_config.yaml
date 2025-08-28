@@ -1,0 +1,4 @@
+features:
+  auth: true
+  logging: enabled
+  monitoring: false

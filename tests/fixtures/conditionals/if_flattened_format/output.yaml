@@ -1,0 +1,13 @@
+modern_feature: 'modern feature enabled'
+complex_modern:
+  service: 'modern-api'
+  port: 8080
+  config:
+    timeout: 30
+    retries: 3
+  features:
+    - 'authentication'
+    - 'authorization'
+    - 'monitoring'
+boolean_feature: true
+disabled_feature: null

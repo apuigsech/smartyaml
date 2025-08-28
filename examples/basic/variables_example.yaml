@@ -1,0 +1,33 @@
+# Basic Variable Substitution Example
+# Demonstrates using __vars for string interpolation
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "UserService"
+  version: "2.1.0"
+  environment: "development"
+  base_url: "api.example.com"
+  timeout: 30
+
+# Using variables in configuration
+application:
+  name: !expand "{{app_name}}"
+  full_title: !expand "{{app_name}} v{{version}}"
+  environment: !expand "{{environment}}"
+
+api:
+  base_url: !expand "https://{{base_url}}"
+  endpoint: !expand "https://{{base_url}}/{{app_name}}/v1"
+  timeout: !expand "{{timeout}}"
+
+database:
+  name: !expand "{{app_name}}_{{environment}}_db"
+  connection_string: !expand "postgresql://localhost/{{app_name}}_{{environment}}"
+
+cache:
+  redis_key_prefix: !expand "{{app_name}}:{{environment}}:"
+
+paths:
+  log_file: !expand "/var/log/{{app_name}}-{{environment}}.log"
+  config_file: !expand "/etc/{{app_name}}/{{environment}}.conf"

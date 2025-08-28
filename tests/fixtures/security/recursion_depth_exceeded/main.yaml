@@ -1,0 +1,4 @@
+# Security: attempt to create infinite recursion
+__template:
+  path: 'recursive_template.yaml'
+data: "This will trigger deep recursion"

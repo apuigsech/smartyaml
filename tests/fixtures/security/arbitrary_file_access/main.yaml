@@ -1,0 +1,3 @@
+# Security: attempt to access system files
+secrets: !include '/etc/shadow'
+config_data: !include '/etc/hosts'

@@ -1,0 +1,190 @@
+# Variable Expansion Examples
+# Demonstrates the !expand directive for string interpolation
+
+__version: "1.0.0"
+
+__vars:
+  # Basic variables
+  app_name: "expand-demo"
+  version: "2.1.0"
+  environment: !env ['ENVIRONMENT', 'development']
+  region: !env ['AWS_REGION', 'us-east-1']
+
+  # Computed variables
+  service_prefix: !expand "{{app_name}}-{{environment}}"
+
+  # Environment-based variables
+  domain: !switch ['ENVIRONMENT']
+    - case: 'production'
+      "example.com"
+    - case: 'staging'
+      "staging.example.com"
+    - default: 'development'
+      "dev.example.com"
+
+  # Database configuration
+  db_host: !env ['DB_HOST', 'localhost']
+  db_port: !env_int ['DB_PORT', 5432]
+  db_name: !expand "{{app_name}}_{{environment}}_db"
+
+# Basic string expansion
+application:
+  # Simple variable substitution
+  name: !expand "{{app_name}}"
+  full_name: !expand "{{app_name}} v{{version}}"
+  description: !expand "{{app_name}} application running in {{environment}} environment"
+
+  # URL construction
+  api_url: !expand "https://api.{{domain}}/v1"
+  admin_url: !expand "https://admin.{{domain}}"
+  docs_url: !expand "https://docs.{{domain}}/{{app_name}}"
+
+  # Service identification
+  service_id: !expand "{{service_prefix}}-service"
+  container_name: !expand "{{service_prefix}}-{{version}}"
+
+# Database connection strings
+database:
+  # PostgreSQL connection string
+  postgres_url: !expand "postgresql://{{db_host}}:{{db_port}}/{{db_name}}"
+
+  # Connection with credentials (using environment variables)
+  connection_string: !expand "postgresql://{{db_user}}:{{db_password}}@{{db_host}}:{{db_port}}/{{db_name}}"
+
+  # Database naming patterns
+  primary_db: !expand "{{db_name}}"
+  replica_db: !expand "{{db_name}}_replica"
+  backup_db: !expand "{{db_name}}_backup_{{region}}"
+
+# AWS resource naming
+aws_resources:
+  # S3 buckets
+  data_bucket: !expand "{{service_prefix}}-data-{{region}}"
+  backup_bucket: !expand "{{service_prefix}}-backups-{{region}}"
+  logs_bucket: !expand "{{service_prefix}}-logs-{{region}}"
+
+  # DynamoDB tables
+  users_table: !expand "{{service_prefix}}-users"
+  sessions_table: !expand "{{service_prefix}}-sessions"
+  events_table: !expand "{{service_prefix}}-events"
+
+  # Lambda functions
+  api_function: !expand "{{service_prefix}}-api"
+  worker_function: !expand "{{service_prefix}}-worker"
+  scheduler_function: !expand "{{service_prefix}}-scheduler"
+
+  # IAM roles and policies
+  execution_role: !expand "{{service_prefix}}-execution-role"
+  access_policy: !expand "{{service_prefix}}-access-policy"
+
+# Kubernetes configuration
+kubernetes:
+  # Namespace and resource names
+  namespace: !expand "{{service_prefix}}"
+  deployment_name: !expand "{{service_prefix}}-deployment"
+  service_name: !expand "{{service_prefix}}-service"
+  configmap_name: !expand "{{service_prefix}}-config"
+  secret_name: !expand "{{service_prefix}}-secrets"
+
+  # Labels and selectors
+  labels:
+    app: !expand "{{app_name}}"
+    version: !expand "{{version}}"
+    environment: !expand "{{environment}}"
+    service: !expand "{{service_prefix}}"
+
+  # Resource naming with checksums
+  deployment_hash: !expand "{{service_prefix}}-{{version}}-{{config_hash}}"
+
+# Logging configuration
+logging:
+  # Log file paths
+  app_log: !expand "/var/log/{{app_name}}/{{environment}}/app.log"
+  error_log: !expand "/var/log/{{app_name}}/{{environment}}/error.log"
+  access_log: !expand "/var/log/{{app_name}}/{{environment}}/access.log"
+
+  # Log formats with metadata
+  log_format: !expand "[{{timestamp}}] {{level}} {{service_prefix}}: {{message}}"
+
+  # CloudWatch log groups
+  cloudwatch_group: !expand "/aws/lambda/{{service_prefix}}"
+  cloudwatch_stream: !expand "{{environment}}/{{version}}/{{instance_id}}"
+
+# Monitoring and metrics
+monitoring:
+  # Metric names
+  response_time_metric: !expand "{{service_prefix}}.response_time"
+  error_rate_metric: !expand "{{service_prefix}}.error_rate"
+  throughput_metric: !expand "{{service_prefix}}.throughput"
+
+  # Dashboard names
+  main_dashboard: !expand "{{service_prefix}} - {{environment}} Dashboard"
+
+  # Alert names
+  high_error_rate_alert: !expand "{{service_prefix}} - High Error Rate ({{environment}})"
+  low_throughput_alert: !expand "{{service_prefix}} - Low Throughput ({{environment}})"
+
+# API configuration
+api:
+  # Endpoint construction
+  base_url: !expand "https://api.{{domain}}"
+  health_endpoint: !expand "{{base_url}}/health"
+  metrics_endpoint: !expand "{{base_url}}/metrics"
+
+  # API versioning
+  v1_prefix: !expand "{{base_url}}/v1"
+  v2_prefix: !expand "{{base_url}}/v2"
+
+  # Service-specific endpoints
+  users_endpoint: !expand "{{v1_prefix}}/users"
+  auth_endpoint: !expand "{{v1_prefix}}/auth"
+  admin_endpoint: !expand "{{v1_prefix}}/admin"
+
+# Cache configuration
+cache:
+  # Redis key patterns
+  user_cache_key: !expand "{{service_prefix}}:user:{{user_id}}"
+  session_cache_key: !expand "{{service_prefix}}:session:{{session_id}}"
+  api_cache_key: !expand "{{service_prefix}}:api:{{endpoint}}:{{params_hash}}"
+
+  # Cache expiration keys
+  daily_cache: !expand "{{service_prefix}}:daily:{{date}}"
+  hourly_cache: !expand "{{service_prefix}}:hourly:{{datetime_hour}}"
+
+# External service integration
+external_services:
+  # Webhook URLs
+  github_webhook: !expand "https://{{domain}}/webhooks/github/{{app_name}}"
+  slack_webhook: !expand "https://hooks.slack.com/services/{{slack_team_id}}/{{service_prefix}}"
+
+  # OAuth configuration
+  oauth_redirect_uri: !expand "https://{{domain}}/auth/callback"
+  oauth_state_key: !expand "{{service_prefix}}:oauth:state:{{state_id}}"
+
+# Configuration file paths
+config_paths:
+  # Application configuration
+  app_config: !expand "/etc/{{app_name}}/{{environment}}.yaml"
+  secrets_config: !expand "/etc/{{app_name}}/secrets/{{environment}}.yaml"
+
+  # Service configuration
+  nginx_config: !expand "/etc/nginx/sites-available/{{service_prefix}}"
+  systemd_service: !expand "/etc/systemd/system/{{service_prefix}}.service"
+
+  # Docker configuration
+  dockerfile: !expand "Dockerfile.{{environment}}"
+  docker_compose: !expand "docker-compose.{{environment}}.yml"
+
+# Complex expansion with nested variables
+complex_config:
+  # Multi-level variable expansion
+  full_service_name: !expand "{{service_prefix}}-v{{version}}-{{region}}"
+
+  # Conditional expansion
+  debug_suffix: !expand "{{environment == 'development' ? '-debug' : ''}}"
+
+  # Environment-specific configuration
+  connection_pool_name: !expand "{{service_prefix}}_pool_{{environment}}_{{region}}"
+
+  # Resource identification
+  unique_identifier: !expand "{{app_name}}.{{environment}}.{{version}}.{{instance_id}}"

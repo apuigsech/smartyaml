@@ -1,0 +1,3 @@
+config:
+  allowed_var: "allowed_value"
+  public_var: "public_value"

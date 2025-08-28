@@ -1,0 +1,24 @@
+__version: "1.0.0"
+
+__vars:
+  database:
+    host: "localhost"
+    port: 5432
+    credentials:
+      username: "admin"
+      password: "secret"
+  apps:
+    - name: "app1"
+      port: 8080
+    - name: "app2"
+      port: 8081
+
+# Test nested variable access with dot notation
+config:
+  db_host: !var "database.host"
+  db_port: !var "database.port"
+  db_user: !var "database.credentials.username"
+  db_pass: !var "database.credentials.password"
+  first_app_name: !var "apps.0.name"
+  first_app_port: !var "apps.0.port"
+  second_app_name: !var "apps.1.name"

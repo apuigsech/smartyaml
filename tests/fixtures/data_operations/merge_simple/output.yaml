@@ -1,0 +1,7 @@
+merged_data:
+  base:
+    name: "base_name"
+    port: 8080
+  override:
+    name: "override_name"
+    extra: "added_value"

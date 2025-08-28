@@ -1,0 +1,15 @@
+__schema:
+  type: object
+  properties:
+    name:
+      type: string
+    port:
+      type: integer
+    enabled:
+      type: boolean
+  required: [name, port, enabled]
+
+# Valid data that matches schema
+name: "test_service"
+port: 8080
+enabled: true

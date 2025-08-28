@@ -1,0 +1,9 @@
+# This file contains directives that should NOT be processed
+database:
+  host: !env ['DB_HOST', 'localhost']
+  port: !env_int ['DB_PORT', 5432]
+
+features: !concat [
+  ['basic'],
+  ['advanced']
+]

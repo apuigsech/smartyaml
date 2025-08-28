@@ -1,0 +1,4 @@
+messages:
+  with_defined: "This has defined_value"
+  with_default: "This has default_value"
+  multiple_defaults: "Values: default1 and default2"

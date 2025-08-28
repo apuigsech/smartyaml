@@ -1,0 +1,13 @@
+__version: "1.0.0"
+
+__vars:
+  existing_var: "exists"
+
+# Test !var directive with default values using pipe syntax
+config:
+  existing: !var "existing_var"
+  missing_str: !var "missing|default_string"
+  missing_int: !var "missing|42"
+  missing_float: !var "missing|3.14"
+  missing_bool: !var "missing|true"
+  missing_null: !var "missing|null"

@@ -1,0 +1,5 @@
+description: "Basic template usage with use: format - loads from templates directory"
+environment: {}
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_use_basic/templates"
+  base_path: "."

@@ -1,0 +1,32 @@
+# Example 3: Environment-Based Schema Composition  
+# Demonstrates conditional schema loading based on environment
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "EnvApp"
+  app_version: "1.5.0"
+  environment: !env ['ENVIRONMENT', 'development']
+
+# Simple schema loading - use core schema in all cases
+__schema: !include_yaml 'schemas/core_schema.yaml'
+
+# Configuration
+app:
+  name: !var "app_name"
+  version: !var "app_version"
+  port: 8080
+  debug: !env_bool ['DEBUG', true]
+
+database:
+  host: !env ['DB_HOST', 'localhost'] 
+  port: !env_int ['DB_PORT', 5432]
+  name: !expand "{{app_name}}_{{environment}}"
+  ssl: !env_bool ['DB_SSL', false]
+  pool_size: !env_int ['DB_POOL_SIZE', 10]
+  timeout: 30.0
+
+# Only required in production (based on schema)
+security:
+  encryption: !env_bool ['ENCRYPTION_ENABLED', true]
+  audit_logging: !env_bool ['AUDIT_LOGGING', true]

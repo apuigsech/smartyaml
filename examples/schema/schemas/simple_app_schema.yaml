@@ -1,0 +1,36 @@
+# Simple application schema
+type: object
+properties:
+  app:
+    type: object
+    properties:
+      name:
+        type: string
+        minLength: 1
+        maxLength: 50
+      version:
+        type: string
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+      port:
+        type: integer
+        minimum: 1000
+        maximum: 65535
+      debug:
+        type: boolean
+    required: [name, version, port]
+  
+  database:
+    type: object
+    properties:
+      host:
+        type: string
+        minLength: 1
+      port:
+        type: integer
+        minimum: 1
+        maximum: 65535
+      ssl:
+        type: boolean
+    required: [host, port]
+
+required: [app, database]

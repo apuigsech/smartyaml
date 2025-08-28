@@ -1,0 +1,8 @@
+features:
+  level1:
+    level2:
+      level3: 'deeply nested feature enabled'
+
+conditional_merge:
+  base: 'data'
+  additional: 'extra_data'

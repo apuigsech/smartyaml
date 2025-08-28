@@ -1,0 +1,12 @@
+config:
+  port: 8080
+  offset: -42
+  missing: 9000
+  pi: 3.14159
+  number: 42.0
+  missing_float: 1.5
+  enabled: true
+  disabled: false
+  yes_val: true
+  no_val: false
+  missing_bool: true

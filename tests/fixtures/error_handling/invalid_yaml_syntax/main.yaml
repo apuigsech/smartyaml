@@ -1,0 +1,6 @@
+# Error: invalid YAML syntax
+config:
+  - item1: value1
+    item2: value2
+  - invalid: [ unclosed bracket
+  - another: "unclosed string

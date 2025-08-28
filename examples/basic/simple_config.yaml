@@ -1,0 +1,25 @@
+# Basic SmartYAML Configuration Example
+# This demonstrates the simplest use case without any special features
+
+__version: "1.0.0"
+
+# Simple configuration values
+app:
+  name: "MyApplication"
+  version: "1.0.0"
+  description: "A simple application configuration"
+
+database:
+  host: "localhost"
+  port: 5432
+  name: "myapp_db"
+
+logging:
+  level: "INFO"
+  file: "/var/log/myapp.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+features:
+  - authentication
+  - logging
+  - monitoring

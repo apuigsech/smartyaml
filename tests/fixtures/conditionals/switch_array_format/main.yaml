@@ -1,0 +1,7 @@
+# Test array format (non-flattened) to ensure compatibility
+log_level: !switch ['LOG_LEVEL', [
+  {case: 'debug', level: 'DEBUG', verbose: true},
+  {case: 'info', level: 'INFO', verbose: false},
+  {case: 'error', level: 'ERROR', verbose: false},
+  {default: 'warn', level: 'WARN', verbose: false}
+]]

@@ -1,0 +1,10 @@
+__vars:
+  app_name: "MyApp"
+  default_port: 3000  # Override template variable
+
+__template:
+  path: 'template.yaml'
+  overlay: true
+
+service:
+  name: "{{app_name}}"  # Use main variable

@@ -1,0 +1,222 @@
+# Switch Conditional Processing
+# Demonstrates multi-way conditional logic with !switch
+
+__version: "1.0.0"
+
+__vars:
+  app_name: "switch-demo"
+
+# Database configuration based on environment
+database: !switch ['DATABASE_TYPE']
+  - case: 'postgres'
+    type: "postgresql"
+    driver: "postgresql+psycopg2"
+    host: !env ['DB_HOST', 'localhost']
+    port: 5432
+    features:
+      - json_support
+      - full_text_search
+      - materialized_views
+    pool:
+      size: 20
+      timeout: 30
+
+  - case: 'mysql'
+    type: "mysql"
+    driver: "mysql+pymysql"
+    host: !env ['DB_HOST', 'localhost']
+    port: 3306
+    features:
+      - json_support
+      - partitioning
+    pool:
+      size: 15
+      timeout: 25
+
+  - case: 'sqlite'
+    type: "sqlite"
+    driver: "sqlite"
+    file: !expand "/data/{{app_name}}.db"
+    features:
+      - lightweight
+      - embedded
+    settings:
+      journal_mode: "WAL"
+      synchronous: "NORMAL"
+
+  - default: 'postgres'
+    type: "postgresql"
+    driver: "postgresql+psycopg2"
+    host: "localhost"
+    port: 5432
+
+# Deployment configuration based on platform
+deployment: !switch ['DEPLOYMENT_PLATFORM']
+  - case: 'kubernetes'
+    type: "k8s"
+    namespace: !expand "{{app_name}}-namespace"
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    scaling:
+      min_replicas: 2
+      max_replicas: 10
+      target_cpu: 70
+    ingress:
+      enabled: true
+      tls: true
+      annotations:
+        kubernetes.io/ingress.class: "nginx"
+
+  - case: 'docker'
+    type: "container"
+    image: !expand "{{app_name}}:latest"
+    ports:
+      - "8080:8080"
+    volumes:
+      - "/data:/app/data"
+      - "/logs:/app/logs"
+    environment:
+      - "NODE_ENV=production"
+    restart_policy: "always"
+
+  - case: 'serverless'
+    type: "lambda"
+    runtime: "python3.9"
+    memory: 512
+    timeout: 30
+    environment_variables:
+      APP_NAME: !expand "{{app_name}}"
+    vpc_config:
+      subnet_ids: !env ['SUBNET_IDS', '']
+      security_group_ids: !env ['SECURITY_GROUP_IDS', '']
+
+  - default: 'docker'
+    type: "container"
+    image: !expand "{{app_name}}:latest"
+    ports:
+      - "8080:8080"
+
+# Caching strategy based on scale
+caching: !switch ['SCALE_TIER']
+  - case: 'enterprise'
+    provider: "redis-cluster"
+    nodes:
+      - "redis-node-1:6379"
+      - "redis-node-2:6379"
+      - "redis-node-3:6379"
+    features:
+      - clustering
+      - persistence
+      - backup
+    ttl: 7200
+    max_memory: "4gb"
+
+  - case: 'professional'
+    provider: "redis"
+    host: !env ['REDIS_HOST', 'localhost']
+    port: 6379
+    features:
+      - persistence
+      - backup
+    ttl: 3600
+    max_memory: "1gb"
+
+  - case: 'basic'
+    provider: "memory"
+    max_size: 100000
+    ttl: 1800
+    eviction_policy: "lru"
+
+  - default: 'memory'
+    provider: "memory"
+    max_size: 50000
+    ttl: 900
+
+# Logging configuration based on environment
+logging: !switch ['LOG_ENVIRONMENT']
+  - case: 'production'
+    level: "WARN"
+    format: "json"
+    handlers:
+      - type: "file"
+        file: "/var/log/app.log"
+        rotation: "daily"
+        retention: 30
+      - type: "syslog"
+        facility: "local0"
+    sampling:
+      enabled: true
+      rate: 0.1
+
+  - case: 'staging'
+    level: "INFO"
+    format: "structured"
+    handlers:
+      - type: "file"
+        file: "/var/log/app.log"
+        rotation: "daily"
+        retention: 7
+      - type: "console"
+        colorized: true
+
+  - case: 'development'
+    level: "DEBUG"
+    format: "human"
+    handlers:
+      - type: "console"
+        colorized: true
+        detailed: true
+    features:
+      - source_location
+      - stack_traces
+      - request_ids
+
+  - default: 'development'
+    level: "INFO"
+    format: "human"
+    handlers:
+      - type: "console"
+
+# Monitoring setup based on tier
+monitoring: !switch ['MONITORING_TIER']
+  - case: 'full'
+    metrics:
+      enabled: true
+      detailed: true
+      custom_metrics: true
+    tracing:
+      enabled: true
+      sampling_rate: 1.0
+      detailed_spans: true
+    alerts:
+      enabled: true
+      channels: ["email", "slack", "pagerduty"]
+    dashboards:
+      - "system-overview"
+      - "application-metrics"
+      - "business-metrics"
+
+  - case: 'basic'
+    metrics:
+      enabled: true
+      detailed: false
+    tracing:
+      enabled: true
+      sampling_rate: 0.1
+    alerts:
+      enabled: true
+      channels: ["email"]
+    dashboards:
+      - "system-overview"
+
+  - default: 'minimal'
+    metrics:
+      enabled: true
+      detailed: false
+    health_checks:
+      enabled: true

@@ -1,0 +1,4 @@
+# Error: unknown/unsupported directive
+data: !unknown_directive ['param1', 'param2']
+config: !nonexistent_tag 'value'
+result: !invalid_command {}

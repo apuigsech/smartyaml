@@ -1,0 +1,8 @@
+config:
+  db_host: localhost
+  db_port: 5432
+  db_user: admin
+  db_pass: secret
+  first_app_name: app1
+  first_app_port: 8080
+  second_app_name: app2

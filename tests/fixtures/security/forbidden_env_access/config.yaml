@@ -1,0 +1,8 @@
+
+description: "Access to forbidden environment variables should raise SecurityViolationError"
+environment:
+  PASSWORD: "secret123"
+  SECRET_KEY: "secretkey456"
+  API_TOKEN: "token789"
+
+  security:

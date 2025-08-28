@@ -1,0 +1,59 @@
+# CORS Configuration
+# Cross-Origin Resource Sharing settings
+
+__version: "1.0.0"
+
+__vars:
+  frontend_url: !env ['FRONTEND_URL', 'http://localhost:3000']
+  admin_url: !env ['ADMIN_URL', 'http://localhost:3001']
+
+# CORS settings with environment-based origins
+enabled: !env_bool ['CORS_ENABLED', true]
+
+# Allowed origins based on environment
+origins: !switch ['ENVIRONMENT']
+  - case: 'production'
+    - "https://app.example.com"
+    - "https://admin.example.com"
+    - !expand "{{frontend_url}}"
+
+  - case: 'staging'
+    - "https://staging.example.com"
+    - "https://staging-admin.example.com"
+    - !expand "{{frontend_url}}"
+    - !expand "{{admin_url}}"
+
+  - default: 'development'
+    - !expand "{{frontend_url}}"
+    - !expand "{{admin_url}}"
+    - "http://localhost:*"
+
+# HTTP methods allowed
+methods:
+  - "GET"
+  - "POST"
+  - "PUT"
+  - "DELETE"
+  - "OPTIONS"
+  - "PATCH"
+
+# Headers allowed in requests
+allowed_headers:
+  - "Content-Type"
+  - "Authorization"
+  - "X-Requested-With"
+  - "Accept"
+  - "Origin"
+  - "X-CSRF-Token"
+
+# Headers exposed to the client
+exposed_headers:
+  - "X-Total-Count"
+  - "X-Page-Count"
+  - "Link"
+
+# Credentials handling
+credentials: !env_bool ['CORS_CREDENTIALS', true]
+
+# Maximum age for preflight cache (in seconds)
+max_age: !env_int ['CORS_MAX_AGE', 86400]

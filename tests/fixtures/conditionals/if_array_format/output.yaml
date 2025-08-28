@@ -1,0 +1,6 @@
+legacy_feature: 'legacy feature enabled'
+complex_legacy:
+  service: 'legacy-api'
+  port: 9090
+  features: ['authentication', 'logging']
+simple_bool: true
