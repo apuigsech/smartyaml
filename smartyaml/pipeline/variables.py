@@ -86,7 +86,7 @@ class VariableProcessor:
         if depth > self.config.max_variable_depth:
             raise RecursionLimitExceededError(
                 self.config.max_variable_depth,
-                f"variable expansion depth",
+                "variable expansion depth",
                 str(context.file_path),
             )
 
@@ -130,7 +130,7 @@ class VariableProcessor:
 
                         raise VariableNotFoundError(
                             var_path,
-                            f"Circular reference detected in variable expansion",
+                            "Circular reference detected in variable expansion",
                             str(context.file_path),
                         )
 
@@ -329,7 +329,8 @@ class VariableProcessor:
 
                 raise VariableNotFoundError(
                     var_path,
-                    f"Cannot access property '{part}' on non-object/non-array value at '{'.'.join(path_parts[:i])}'",
+                    f"Cannot access property '{part}' on non-object/non-array "
+                    f"value at '{'.'.join(path_parts[:i])}'",
                     str(context.file_path),
                 )
 
@@ -383,7 +384,8 @@ class VariableProcessor:
                 # Neither dict nor list - can't access nested property - always raise exception
                 raise VariableNotFoundError(
                     var_path,
-                    f"Cannot access property '{part}' on non-object/non-array value at '{'.'.join(path_parts[:i])}'",
+                    f"Cannot access property '{part}' on non-object/non-array "
+                    f"value at '{'.'.join(path_parts[:i])}'",
                     str(context.file_path),
                 )
 

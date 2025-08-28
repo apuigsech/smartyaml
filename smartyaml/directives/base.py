@@ -274,7 +274,7 @@ class FileDirectiveHandler(BaseDirectiveHandler):
             from ..exceptions import SecurityViolationError
 
             raise SecurityViolationError(
-                f"File access blocked in sandbox mode",
+                "File access blocked in sandbox mode",
                 context.file_path or "unknown",
                 "sandbox_file_access",
             )
@@ -483,7 +483,8 @@ class EnvironmentDirectiveHandler(BaseDirectiveHandler):
             from ..exceptions import DirectiveProcessingError
 
             raise DirectiveProcessingError(
-                f"Cannot convert environment variable '{var_name}' value '{value}' to {target_type.__name__}: {e}",
+                f"Cannot convert environment variable '{var_name}' value "
+                f"'{value}' to {target_type.__name__}: {e}",
                 context.file_path or "unknown",
                 self.directive_name,
             )

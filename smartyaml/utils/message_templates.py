@@ -46,7 +46,8 @@ class MessageTemplates:
             "processing_failed": "Failed to process !{directive} directive: {reason}",
             "conversion_failed": "Cannot convert {value_type} '{value}' to {target_type}{context}: {reason}",
             "env_var_not_found": "Environment variable '{var_name}' not found and no default provided",
-            "env_var_conversion": "Cannot convert environment variable '{var_name}' value '{value}' to {target_type}: {reason}",
+            "env_var_conversion": "Cannot convert environment variable '{var_name}' "
+            "value '{value}' to {target_type}: {reason}",
         },
         # Type validation errors
         MessageCategory.TYPE_VALIDATION: {

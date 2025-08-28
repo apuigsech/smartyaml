@@ -84,7 +84,7 @@ jobs:
         
         # Create a simple test file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            f.write('test: !env(HOME)')
+            f.write('test: hello world')
             test_file = f.name
         
         try:

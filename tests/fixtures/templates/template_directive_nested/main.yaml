@@ -1,0 +1,10 @@
+# Test nested template loading using !template directive
+__version: "1.0.0"
+
+# Load microservice template which itself loads database template
+user_service: !template ['applications.microservice']
+
+# Override specific values
+user_service_config:
+  name: "user-management-service"
+  version: "2.1.0"

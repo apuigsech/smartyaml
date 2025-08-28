@@ -1,0 +1,5 @@
+description: "Test enhanced !template directive with array syntax ['template.name']"
+
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_directive_basic/templates"
+  base_path: "."

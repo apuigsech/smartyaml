@@ -27,7 +27,7 @@ from .exceptions import (
 from .pipeline.processor import SmartYAMLProcessor
 
 # Version information
-__version__ = "1.0.0"
+__version__ = "1.0.0a1"
 __all__ = [
     "load",
     "loads",

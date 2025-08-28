@@ -1,0 +1,15 @@
+# Test using enhanced !template directive with array syntax
+__version: "1.0.0"
+
+# Load web service template using new !template directive
+api_service: !template ['services.web']
+
+# Application-specific configuration
+app:
+  name: "my-api-server"
+  version: "1.2.0"
+  
+database:
+  host: "localhost"
+  port: 5432
+  name: "myapp"

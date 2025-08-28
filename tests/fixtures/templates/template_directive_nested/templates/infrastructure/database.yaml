@@ -1,0 +1,20 @@
+# Database Infrastructure Template
+
+__version: "1.0.0"
+
+database:
+  engine: "postgresql"
+  version: "15"
+  port: 5432
+  
+connection:
+  max_connections: 100
+  timeout: 30
+  
+backup:
+  enabled: true
+  retention_days: 30
+  
+monitoring:
+  metrics: true
+  slow_query_log: true

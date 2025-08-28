@@ -273,7 +273,9 @@ class SmartYAMLProcessor:
             self.debugger.trace_step(
                 "processing",
                 "complete",
-                total_time=sum(context.stage_times.values()) if context.stage_times else 0,
+                total_time=(
+                    sum(context.stage_times.values()) if context.stage_times else 0
+                ),
             )
 
             return data

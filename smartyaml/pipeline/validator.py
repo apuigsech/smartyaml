@@ -27,7 +27,7 @@ class SchemaValidator:
 
         try:
             # Import jsonschema with error handling
-            import jsonschema
+            import jsonschema  # noqa: F401
         except ImportError:
             if self.config.require_schema_validation:
                 raise SmartYAMLError(

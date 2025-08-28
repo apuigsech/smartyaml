@@ -54,3 +54,15 @@ def test_templates_template_nested_inheritance(env_vars):
     """Nested template inheritance - template that loads a template that loads another template (3-level inheritance chain)."""
     runner = TestRunner()
     runner.load_and_compare_fixture("templates/template_nested_inheritance", env_vars)
+
+
+def test_templates_template_directive_basic(env_vars):
+    """Enhanced !template directive with array syntax - loads template using ['template.name'] format."""
+    runner = TestRunner()
+    runner.load_and_compare_fixture("templates/template_directive_basic", env_vars)
+
+
+def test_templates_template_directive_nested(env_vars):
+    """Nested !template directive usage - template that uses !template directive to load other templates."""
+    runner = TestRunner()
+    runner.load_and_compare_fixture("templates/template_directive_nested", env_vars)

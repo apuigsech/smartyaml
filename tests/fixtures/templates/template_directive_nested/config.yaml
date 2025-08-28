@@ -1,0 +1,5 @@
+description: "Test nested !template directive usage with multiple template levels"
+
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_directive_nested/templates"
+  base_path: "."

@@ -48,7 +48,7 @@ pip install pysmartyaml
 pip install git+https://github.com/apuigsech/smartyaml.git
 
 # Install specific version/tag
-pip install git+https://github.com/apuigsech/smartyaml.git@v1.0.0
+pip install git+https://github.com/apuigsech/smartyaml.git@v1.0.0-alpha-1
 
 # Clone and install for development
 git clone https://github.com/apuigsech/smartyaml.git

@@ -1,0 +1,36 @@
+# Expected result after processing !template directive
+# Note: __version metadata is stripped by default
+api_service:
+  service:
+    type: "web"
+    framework: "fastapi"
+  server:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 4
+    timeout: 30
+  middleware:
+    - name: "cors"
+      enabled: true
+    - name: "compression"
+      enabled: true
+    - name: "rate_limiting"
+      enabled: false
+  logging:
+    level: "INFO"
+    format: "json"
+  monitoring:
+    health_check: "/health"
+    metrics: "/metrics"
+  dependencies:
+    - "fastapi>=0.100.0"
+    - "uvicorn[standard]>=0.23.0"
+
+app:
+  name: "my-api-server"
+  version: "1.2.0"
+
+database:
+  host: "localhost"
+  port: 5432
+  name: "myapp"

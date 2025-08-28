@@ -183,7 +183,8 @@ class TypeConverter:
             except Exception as e:
                 context_msg = f" for {context}" if context else ""
                 raise ValueError(
-                    f"Cannot convert {type(value).__name__} '{value}' to {target_type.__name__}{context_msg}: {e}"
+                    f"Cannot convert {type(value).__name__} '{value}' to "
+                    f"{target_type.__name__}{context_msg}: {e}"
                 )
 
     def _convert_to_int(self, value: Any, context: str = None) -> int:

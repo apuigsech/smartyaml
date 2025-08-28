@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pysmartyaml"
-version = "0.1.0"
+version = "1.0.0b1"
 description = "Extended YAML format with custom directives for imports, environment variables, and more"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = "MIT"
@@ -62,17 +62,12 @@ docs = [
 [tool.setuptools]
 packages = [
     "smartyaml", 
-    "smartyaml.caching",
     "smartyaml.config",
     "smartyaml.directives", 
+    "smartyaml.directives.handlers",
     "smartyaml.errors",
-    "smartyaml.metadata",
     "smartyaml.pipeline", 
-    "smartyaml.security",
-    "smartyaml.templates",
-    "smartyaml.utils",
-    "smartyaml.validation",
-    "smartyaml.variables"
+    "smartyaml.utils"
 ]
 
 [tool.setuptools.package-data]

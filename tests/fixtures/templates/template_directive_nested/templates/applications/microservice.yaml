@@ -1,0 +1,22 @@
+# Microservice Application Template
+
+__version: "1.0.0"
+
+application:
+  type: "microservice"
+  runtime: "python"
+  
+container:
+  image: "python:3.11-slim"
+  port: 8080
+  
+resources:
+  cpu: "500m"
+  memory: "512Mi"
+  
+health_checks:
+  liveness: "/health/live"
+  readiness: "/health/ready"
+  
+# Use database infrastructure template
+infrastructure: !template ['infrastructure.database']
