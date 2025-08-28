@@ -1,0 +1,5 @@
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_directive_array/templates"
+  base_path: "."
+env_vars:
+  TIMEOUT: "90"

@@ -1,0 +1,6 @@
+api_url: "https://production-api.company.com/v2"
+max_connections: "250"
+service_name: "user-management-service"
+deployment:
+  region: "us-west-2"
+  environment: "production"

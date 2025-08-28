@@ -1,0 +1,6 @@
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_directive_scalar/templates"
+  base_path: "."
+env_vars:
+  API_URL: "https://production-api.company.com/v2"
+  MAX_CONNECTIONS: "250"

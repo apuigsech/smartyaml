@@ -66,3 +66,15 @@ def test_templates_template_directive_nested(env_vars):
     """Nested !template directive usage - template that uses !template directive to load other templates."""
     runner = TestRunner()
     runner.load_and_compare_fixture("templates/template_directive_nested", env_vars)
+
+
+def test_templates_template_directive_array(env_vars):
+    """!template directive with array template - loads template containing array at root level."""
+    runner = TestRunner()
+    runner.load_and_compare_fixture("templates/template_directive_array", env_vars)
+
+
+def test_templates_template_directive_scalar(env_vars):
+    """!template directive with scalar templates - loads templates containing scalar values at root level."""
+    runner = TestRunner()
+    runner.load_and_compare_fixture("templates/template_directive_scalar", env_vars)

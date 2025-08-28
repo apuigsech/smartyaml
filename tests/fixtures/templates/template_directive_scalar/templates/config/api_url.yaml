@@ -1,0 +1,2 @@
+# Scalar template - string value with environment variable
+!env ['API_URL', 'https://api.example.com/v1']

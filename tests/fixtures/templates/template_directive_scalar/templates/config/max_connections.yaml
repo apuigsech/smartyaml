@@ -1,0 +1,2 @@
+# Scalar template - integer value with environment variable
+!env ['MAX_CONNECTIONS', 100, int]

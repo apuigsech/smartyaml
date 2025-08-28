@@ -1,0 +1,12 @@
+# Test !template directive with scalar template
+__version: "1.0.0"
+
+# Load templates that contain scalar values at root level
+api_url: !template ['config.api_url']
+max_connections: !template ['config.max_connections']
+service_name: !template ['config.service_name']
+
+# Additional configuration
+deployment:
+  region: "us-west-2"
+  environment: "production"

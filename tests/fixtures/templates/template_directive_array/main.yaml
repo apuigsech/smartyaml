@@ -1,0 +1,10 @@
+# Test !template directive with array template
+__version: "1.0.0"
+
+# Load a template that contains an array at root level
+scenarios: !template ['test_scenarios']
+
+# Additional configuration
+test_config:
+  name: "Array Template Test"
+  enabled: true

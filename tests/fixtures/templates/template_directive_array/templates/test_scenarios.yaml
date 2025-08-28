@@ -1,0 +1,24 @@
+# Array template - root level array
+- id: "scenario-1"
+  name: "First scenario"
+  description: "Test scenario with basic configuration"
+  config:
+    timeout: 30
+    retry_count: 3
+
+- id: "scenario-2"
+  name: "Second scenario"  
+  description: "Test scenario with environment variable"
+  config:
+    timeout: !env ['TIMEOUT', 60, int]
+    retry_count: 5
+    
+- id: "scenario-3"
+  name: "Third scenario"
+  description: "Test scenario with complex nested structure"
+  config:
+    timeout: 45
+    retry_count: 2
+    advanced:
+      parallel: true
+      workers: 4

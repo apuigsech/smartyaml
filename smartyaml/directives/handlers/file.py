@@ -324,21 +324,43 @@ class TemplateHandler(FileDirectiveHandler):
 
             template_content = template_path.read_text()
 
-            # Process template through stages 1-4 (same as __template processing)
-            from ...pipeline.processor import SmartYAMLProcessor
-
-            processor = SmartYAMLProcessor(self.config)
-
-            # Create new context for template processing
-            template_context = type(context)(self.config, template_path)
-            template_context.recursion_depth = context.recursion_depth
-            template_context.loaded_files = context.loaded_files.copy()
-            template_context.variables = copy.deepcopy(context.variables)
-
-            # Process template through stages 1-4 only (not variable expansion)
-            template_data = self._process_template_stages(
-                processor, template_content, template_context
+            # Parse template content directly (allowing non-dict roots)
+            template_data = self._parse_template_content(
+                template_content, context, template_path
             )
+
+            # Process template through remaining stages if it's a dict
+            if isinstance(template_data, dict):
+                from ...pipeline.processor import SmartYAMLProcessor
+
+                processor = SmartYAMLProcessor(self.config)
+
+                # Create new context for template processing
+                template_context = type(context)(self.config, template_path)
+                template_context.recursion_depth = context.recursion_depth
+                template_context.loaded_files = context.loaded_files.copy()
+                template_context.variables = copy.deepcopy(context.variables)
+
+                # Process through stages 2-4 (skip parsing since we already parsed)
+                template_data = self._process_template_stages_after_parsing(
+                    processor, template_data, template_context
+                )
+            # For non-dict roots (arrays, scalars), still process directives
+            elif self._contains_directives(template_data):
+                from ...pipeline.processor import SmartYAMLProcessor
+
+                processor = SmartYAMLProcessor(self.config)
+
+                # Create new context for template processing
+                template_context = type(context)(self.config, template_path)
+                template_context.recursion_depth = context.recursion_depth
+                template_context.loaded_files = context.loaded_files.copy()
+                template_context.variables = copy.deepcopy(context.variables)
+
+                # Process only directives for non-dict data
+                template_data = processor.directive_processor.process(
+                    template_data, template_context
+                )
 
             return template_data
 
@@ -376,12 +398,86 @@ class TemplateHandler(FileDirectiveHandler):
             data = processor.parser.parse(template_content, template_context)
             template_context.track_stage("parsing")
 
-            # Stage 2: Metadata Resolution
+            # Check if root is a dictionary to determine processing strategy
+            if isinstance(data, dict):
+                # Stage 2: Metadata Resolution (only for dict roots)
+                template_context.check_timeout()
+                data = processor.metadata_processor.process(data, template_context)
+                template_context.track_stage("metadata")
+
+                # Stage 3: Template Processing (only for dict roots)
+                template_context.check_timeout()
+                data = processor.template_processor.process(data, template_context)
+                template_context.track_stage("templates")
+            else:
+                # For non-dict roots (arrays, scalars), skip metadata and template processing
+                # This allows templates to contain arrays or scalars at the root level
+                pass
+
+            # Stage 4: Directive Resolution (works with any data type)
+            template_context.check_timeout()
+            data = processor.directive_processor.process(data, template_context)
+            template_context.track_stage("directives")
+
+            # Skip Stage 5: Variable Expansion - let the main context handle that
+
+            return data
+
+        except Exception:
+            template_context.decrease_recursion()
+            raise
+
+    def _parse_template_content(
+        self, template_content: str, context, template_path
+    ) -> Any:
+        """Parse template content allowing non-dict roots."""
+        import yaml
+
+        from ...pipeline.parser import SmartYAMLLoader
+
+        try:
+
+            def create_loader(stream):
+                return SmartYAMLLoader(stream, self.config)
+
+            data = yaml.load(template_content, Loader=create_loader)
+
+            if data is None:
+                return {}
+
+            return data
+
+        except yaml.YAMLError as e:
+            from ...exceptions import SmartYAMLError
+
+            raise SmartYAMLError(
+                f"Invalid YAML syntax in template: {e}", str(template_path)
+            ) from e
+
+    def _contains_directives(self, data: Any) -> bool:
+        """Check if data contains SmartYAML directives."""
+        if isinstance(data, dict):
+            if "__directive__" in data:
+                return True
+            return any(self._contains_directives(v) for v in data.values())
+        elif isinstance(data, list):
+            return any(self._contains_directives(item) for item in data)
+        else:
+            return False
+
+    def _process_template_stages_after_parsing(
+        self, processor, data: dict, template_context
+    ) -> Any:
+        """Process template through stages 2-4 after parsing is already done."""
+        template_context.check_recursion("template processing")
+
+        try:
+            # Stage 2: Metadata Resolution (only for dict roots)
             template_context.check_timeout()
             data = processor.metadata_processor.process(data, template_context)
             template_context.track_stage("metadata")
 
-            # Stage 3: Template Processing (recursive templates)
+            # Stage 3: Template Processing (only for dict roots)
             template_context.check_timeout()
             data = processor.template_processor.process(data, template_context)
             template_context.track_stage("templates")
@@ -391,13 +487,11 @@ class TemplateHandler(FileDirectiveHandler):
             data = processor.directive_processor.process(data, template_context)
             template_context.track_stage("directives")
 
-            # Skip Stage 5: Variable Expansion - let the main context handle that
-
             return data
 
-        except Exception as e:
+        except Exception:
             template_context.decrease_recursion()
-            raise e
+            raise
 
 
 class TemplateIfHandler(TemplateHandler):
