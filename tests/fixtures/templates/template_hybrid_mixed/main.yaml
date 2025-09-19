@@ -1,0 +1,28 @@
+# Test !template directive with hybrid syntax (both string and array formats)
+
+__version: "1.0.0"
+
+__vars:
+  environment: "staging"
+  service_port: 9000
+
+# Mix of string syntax (simple) and array syntax (consistent with existing)
+microservices:
+  # String syntax - simple and clean
+  api_service: !template 'api/rest'
+  auth_service: !template 'api/auth'
+
+  # Array syntax - consistent with existing codebase
+  web_service: !template ['services/web']
+  worker_service: !template ['services/worker']
+
+# Test in arrays too
+endpoints:
+  - !template 'api/upload'        # String
+  - !template ['api/download']    # Array
+  - !template 'api/health'        # String
+  - !template ['api/metrics']     # Array
+
+global_config:
+  environment: "{{environment}}"
+  port: "{{service_port}}"

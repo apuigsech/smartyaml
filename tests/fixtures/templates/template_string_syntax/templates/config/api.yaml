@@ -1,0 +1,7 @@
+host: "api.{{service_name}}.com"
+port: 8080
+version: "{{api_version}}"
+endpoints:
+  - "/health"
+  - "/status"
+  - "/metrics"

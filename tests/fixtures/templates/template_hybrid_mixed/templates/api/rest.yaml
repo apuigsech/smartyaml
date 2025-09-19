@@ -1,0 +1,6 @@
+name: "rest-api"
+type: "REST API"
+config:
+  host: "0.0.0.0"
+  port: "{{service_port}}"
+  environment: "{{environment}}"

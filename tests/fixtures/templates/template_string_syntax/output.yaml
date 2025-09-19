@@ -1,0 +1,20 @@
+configuration:
+  api:
+    host: "api.test-service.com"
+    port: 8080
+    version: "v1"
+    endpoints:
+      - "/health"
+      - "/status"
+      - "/metrics"
+  database:
+    driver: "postgresql"
+    host: "db.test-service.com"
+    port: 5432
+    name: "test-service_db"
+    connection_pool:
+      min: 5
+      max: 20
+service:
+  name: "test-service"
+  version: "v1"

@@ -1,0 +1,4 @@
+name: "web-frontend"
+type: "Web Service"
+framework: "React"
+port: 3000

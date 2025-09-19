@@ -1,0 +1,4 @@
+path: "/health"
+method: "GET"
+description: "Health check endpoint"
+response: "OK"

@@ -1,0 +1,4 @@
+path: "/download"
+method: "GET"
+description: "File download endpoint"
+streaming: true

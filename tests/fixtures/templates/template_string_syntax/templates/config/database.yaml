@@ -1,0 +1,7 @@
+driver: "postgresql"
+host: "db.{{service_name}}.com"
+port: 5432
+name: "{{service_name}}_db"
+connection_pool:
+  min: 5
+  max: 20

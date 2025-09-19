@@ -6,7 +6,9 @@ Provides a clean interface for processing YAML files with advanced features.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import IO, Any, Dict, List, Optional, Union
+
+import yaml
 
 from .config import ConfigurationError, SmartYAMLConfig, SmartYAMLConfigBuilder
 from .exceptions import (
@@ -27,11 +29,13 @@ from .exceptions import (
 from .pipeline.processor import SmartYAMLProcessor
 
 # Version information
-__version__ = "1.0.0a1"
+__version__ = "1.0.0b2"
 __all__ = [
     "load",
     "loads",
     "load_file",
+    "dump",
+    "dumps",
     "SmartYAMLConfig",
     "SmartYAMLConfigBuilder",
     "SmartYAMLProcessor",
@@ -115,6 +119,10 @@ def loads(
     Raises:
         SmartYAMLError: If processing fails
     """
+    # Handle base_path in config creation
+    if base_path:
+        config_kwargs["base_path"] = Path(base_path).resolve()
+
     # Create or merge configuration
     if config is None:
         config = SmartYAMLConfig(**config_kwargs)
@@ -126,10 +134,6 @@ def loads(
     # Add external variables to config
     if variables:
         config.variables.update(variables)
-
-    # Set base path if provided
-    if base_path:
-        config.base_path = Path(base_path).resolve()
 
     # Create processor and process string
     processor = SmartYAMLProcessor(config)
@@ -210,3 +214,38 @@ def load_with_templates(
     )
 
     return load(file_path, variables=variables, config=config)
+
+
+def dump(data: Any, stream: Optional[IO[str]] = None, **kwds: Any) -> Any:
+    """
+    Serialize a Python object into a YAML formatted stream.
+
+    This is a bypass function to yaml.dump() for compatibility with standard
+    YAML usage.
+
+    Args:
+        data: Python object to serialize
+        stream: Stream to write to, or None to return string
+        **kwds: Additional keyword arguments passed to yaml.dump()
+
+    Returns:
+        YAML string if stream is None, otherwise None
+    """
+    return yaml.dump(data, stream=stream, **kwds)
+
+
+def dumps(data: Any, **kwds: Any) -> Any:
+    """
+    Serialize a Python object into a YAML formatted string.
+
+    This is a bypass function to yaml.dump() for compatibility with standard
+    YAML usage.
+
+    Args:
+        data: Python object to serialize
+        **kwds: Additional keyword arguments passed to yaml.dump()
+
+    Returns:
+        YAML string representation of the data
+    """
+    return yaml.dump(data, **kwds)

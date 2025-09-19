@@ -1,0 +1,16 @@
+# Test !template directive with string syntax (simple format)
+
+__version: "1.0.0"
+
+__vars:
+  api_version: "v1"
+  service_name: "test-service"
+
+# Test simple string syntax for templates
+configuration:
+  api: !template 'config/api'
+  database: !template 'config/database'
+
+service:
+  name: "{{service_name}}"
+  version: "{{api_version}}"

@@ -1,0 +1,11 @@
+path: !expand "/api/{{API_VERSION}}/upload"
+method: "POST"
+description: "File upload endpoint"
+middleware:
+  - auth_required
+  - file_parser
+  - size_limit
+limits:
+  max_file_size: "10MB"
+  allowed_types: ["image/jpeg", "image/png", "application/pdf"]
+timeout: !env ['UPLOAD_TIMEOUT', 120, int]

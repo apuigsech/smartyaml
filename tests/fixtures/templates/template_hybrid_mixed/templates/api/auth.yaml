@@ -1,0 +1,6 @@
+name: "auth-service"
+type: "Authentication"
+features:
+  - "JWT tokens"
+  - "OAuth2"
+  - "Session management"

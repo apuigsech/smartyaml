@@ -1,0 +1,9 @@
+path: "/api/v1/profile"
+method: "GET"
+description: "Get user profile information"
+middleware:
+  - auth_required
+  - json_parser
+security:
+  auth: "bearer_token"
+  scope: ["profile:read"]

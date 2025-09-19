@@ -1,0 +1,18 @@
+__version: "1.0.0"
+
+__vars:
+  service_name: !env ['SERVICE_NAME', 'default-service']
+
+# Mix of includes and templates in an array
+api_endpoints:
+  - !include auth_endpoint.yaml
+  - !include profile_endpoint.yaml
+  - !template api/upload
+  - !template api/notifications
+
+# Additional service configuration
+service:
+  name: "{{service_name}}"
+  port: 8080
+  debug: !env ['DEBUG', false, bool]
+  environment: !env ['ENVIRONMENT', 'production']

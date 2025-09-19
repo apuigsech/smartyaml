@@ -1,0 +1,13 @@
+path: "/api/v1/auth"
+method: "POST"
+description: "User authentication endpoint"
+middleware:
+  - rate_limit
+  - cors
+parameters:
+  - name: "email"
+    required: true
+    type: "string"
+  - name: "password"
+    required: true
+    type: "string"

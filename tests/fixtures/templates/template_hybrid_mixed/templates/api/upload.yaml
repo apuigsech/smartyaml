@@ -1,0 +1,4 @@
+path: "/upload"
+method: "POST"
+description: "File upload endpoint"
+max_size: "10MB"

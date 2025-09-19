@@ -1,0 +1,4 @@
+path: "/metrics"
+method: "GET"
+description: "Prometheus metrics endpoint"
+format: "prometheus"

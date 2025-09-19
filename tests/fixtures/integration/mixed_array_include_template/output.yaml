@@ -1,0 +1,58 @@
+api_endpoints:
+- path: "/api/v1/auth"
+  method: "POST"
+  description: "User authentication endpoint"
+  middleware:
+    - rate_limit
+    - cors
+  parameters:
+    - name: "email"
+      required: true
+      type: "string"
+    - name: "password"
+      required: true
+      type: "string"
+- path: "/api/v1/profile"
+  method: "GET"
+  description: "Get user profile information"
+  middleware:
+    - auth_required
+    - json_parser
+  security:
+    auth: "bearer_token"
+    scope: ["profile:read"]
+- path: "/api/{{API_VERSION}}/upload"
+  method: "POST"
+  description: "File upload endpoint"
+  middleware:
+    - auth_required
+    - file_parser
+    - size_limit
+  limits:
+    max_file_size: "10MB"
+    allowed_types: ["image/jpeg", "image/png", "application/pdf"]
+  timeout: 120
+- path: "/api/{{API_VERSION}}/notifications"
+  method: "GET"
+  description: "Get user notifications"
+  middleware:
+    - auth_required
+    - pagination
+  query_params:
+    - name: "limit"
+      type: "integer"
+      default: 20
+    - name: "offset"
+      type: "integer"
+      default: 0
+    - name: "read"
+      type: "boolean"
+      optional: true
+  cache:
+    enabled: true
+    ttl: 300
+service:
+  name: "api-service"
+  port: 8080
+  debug: "false"
+  environment: "testing"

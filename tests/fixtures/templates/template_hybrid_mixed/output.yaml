@@ -1,0 +1,45 @@
+microservices:
+  api_service:
+    name: "rest-api"
+    type: "REST API"
+    config:
+      host: "0.0.0.0"
+      port: 9000
+      environment: "staging"
+  auth_service:
+    name: "auth-service"
+    type: "Authentication"
+    features:
+      - "JWT tokens"
+      - "OAuth2"
+      - "Session management"
+  web_service:
+    name: "web-frontend"
+    type: "Web Service"
+    framework: "React"
+    port: 3000
+  worker_service:
+    name: "background-worker"
+    type: "Worker Service"
+    queue: "redis"
+    concurrency: 5
+endpoints:
+  - path: "/upload"
+    method: "POST"
+    description: "File upload endpoint"
+    max_size: "10MB"
+  - path: "/download"
+    method: "GET"
+    description: "File download endpoint"
+    streaming: true
+  - path: "/health"
+    method: "GET"
+    description: "Health check endpoint"
+    response: "OK"
+  - path: "/metrics"
+    method: "GET"
+    description: "Prometheus metrics endpoint"
+    format: "prometheus"
+global_config:
+  environment: "staging"
+  port: 9000

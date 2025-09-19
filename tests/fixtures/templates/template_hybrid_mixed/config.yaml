@@ -1,0 +1,5 @@
+description: "Test !template directive with hybrid syntax - both string and array formats in same file"
+
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_hybrid_mixed/templates"
+  base_path: "."

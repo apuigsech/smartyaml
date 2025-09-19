@@ -78,3 +78,15 @@ def test_templates_template_directive_scalar(env_vars):
     """!template directive with scalar templates - loads templates containing scalar values at root level."""
     runner = TestRunner()
     runner.load_and_compare_fixture("templates/template_directive_scalar", env_vars)
+
+
+def test_templates_template_string_syntax(env_vars):
+    """!template directive with string syntax - simple format using !template 'name'."""
+    runner = TestRunner()
+    runner.load_and_compare_fixture("templates/template_string_syntax", env_vars)
+
+
+def test_templates_template_hybrid_mixed(env_vars):
+    """!template directive with hybrid syntax - both string and array formats in same file."""
+    runner = TestRunner()
+    runner.load_and_compare_fixture("templates/template_hybrid_mixed", env_vars)

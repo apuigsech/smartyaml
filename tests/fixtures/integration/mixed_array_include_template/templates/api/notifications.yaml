@@ -1,0 +1,19 @@
+path: !expand "/api/{{API_VERSION}}/notifications"
+method: "GET"
+description: "Get user notifications"
+middleware:
+  - auth_required
+  - pagination
+query_params:
+  - name: "limit"
+    type: "integer"
+    default: 20
+  - name: "offset"
+    type: "integer"
+    default: 0
+  - name: "read"
+    type: "boolean"
+    optional: true
+cache:
+  enabled: !env ['ENABLE_CACHE', true, bool]
+  ttl: 300

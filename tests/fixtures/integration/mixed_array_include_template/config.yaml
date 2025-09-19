@@ -1,0 +1,11 @@
+description: "Integration test combining include and template directives in an array"
+
+env_vars:
+  DEBUG: "false"
+  ENVIRONMENT: "testing"
+  API_VERSION: "v2"
+  SERVICE_NAME: "api-service"
+
+smartyaml_config:
+  template_path: "tests/fixtures/integration/mixed_array_include_template/templates"
+  base_path: "."

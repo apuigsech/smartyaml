@@ -1,0 +1,4 @@
+name: "background-worker"
+type: "Worker Service"
+queue: "redis"
+concurrency: 5

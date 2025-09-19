@@ -252,8 +252,12 @@ class TemplateHandler(FileDirectiveHandler):
         """
         Handle !template directive: load and process template file.
 
+        Supports both string and array syntax:
+        - !template 'template.name' (simple string syntax)
+        - !template ['template.name'] (array syntax for consistency)
+
         Args:
-            value: List containing template name in dot notation: ['dot.notation.name']
+            value: String or list containing template name in dot notation
             context: Processing context
 
         Returns:
@@ -261,15 +265,35 @@ class TemplateHandler(FileDirectiveHandler):
         """
         error_builder = self.get_error_builder(context)
 
-        require_type(value, list, "!template directive", error_builder)
-        require_list_length(
-            value,
-            exact_length=1,
-            field_name="!template directive",
-            context_builder=error_builder,
-        )
+        # Hybrid support: accept both string and array formats
+        if isinstance(value, str):
+            # Simple string syntax: !template 'template.name'
+            template_name = value
+        elif isinstance(value, list):
+            # Array syntax: !template ['template.name'] (backward compatibility)
+            require_list_length(
+                value,
+                exact_length=1,
+                field_name="!template directive",
+                context_builder=error_builder,
+            )
+            template_name = value[0]
+            require_type(
+                template_name, str, "!template directive template name", error_builder
+            )
+        else:
+            # Invalid type - provide clear error message
+            error_builder.raise_directive_syntax_error(
+                directive="template",
+                expected="string or list",
+                received=value,
+                message=(
+                    f"Invalid syntax for !template: expected string like 'template.name' "
+                    f"or list like ['template.name'], got {type(value).__name__}"
+                ),
+            )
 
-        template_name = value[0]
+        # Validate template name is a string (common validation for both syntaxes)
         require_type(
             template_name, str, "!template directive template name", error_builder
         )

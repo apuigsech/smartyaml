@@ -1,0 +1,5 @@
+description: "Test !template directive with string syntax - simple format like !template 'name'"
+
+smartyaml_config:
+  template_path: "tests/fixtures/templates/template_string_syntax/templates"
+  base_path: "."
